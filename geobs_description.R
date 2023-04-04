@@ -7,6 +7,16 @@ filter()
 
 # packages library
 
+library(tidyverse)
+library(lubridate)
+library(RcppRoll)
+library(DT)
+library(readxl)
+library(dbplyr)
+library(RPostgreSQL)
+library(rsdmx)
+library(sf)
+library(stringi)
 
 # Chargement données ---------------------------
 #bdoe
@@ -16,18 +26,20 @@ bdoe_bzh <- data.table::fread(file = "data/export_de_base_20230330.csv")
 bdoe_pdl <- data.table::fread(file = "data/export_de_base_20230330.csv")
 
 #roe
+
 roe_lb <- data.table::fread(file = "data/lb_temp20221219.csv",
                             encoding = "Latin-1")
 
 roe_sn <- data.table::fread(file = "data/sn_temp20221219.csv",
                             encoding = "Latin-1")
+
 #?? fusionner les tables
 
 roe_lb_sn <- fusion(roe_lb, roe_sn)
 
 bdoe_dr2 <- fusion(bdoe_bzh, bdoe_pdl)
 
-# données de contexte
+# import données de contexte
 
 liste2 <- sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.gpkg")
 
@@ -70,11 +82,16 @@ Sélectionner les objets dont le champ sage est null
 
 mapview::mapview(zap_bzh)
 
-mapview::mapview(liste2)
+mapview::mapview(tampon_liste2)
 
 # alternative carto
 
-ggplot(data = liste2) + geom_sf()
+ggplot(data = tampon_liste2) + geom_sf()
+
+#alternative carto 2
+
+carte_sage <- st_read(dsn = "data/sage.gpkg")
+plot(carte_sage)
 
 # Calcul indicateurs de complétude
 
