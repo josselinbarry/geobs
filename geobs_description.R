@@ -1,69 +1,64 @@
-dim(bdoe)
-str(bdoe)
+dim(objet)
+str(objet)
+rm(objet)
+mutate()
+select()
+filter()
 
 # packages library
 
 
 # Chargement données ---------------------------
 #bdoe
-bdoe_bzh <- read.csv(file = "C:/SIG/R/geobs/data/export_de_base_20230330.csv",
-                  header = TRUE,
-                  sep = ";",
-                  dec = ".")
 
-bdoe_pdl <- read.csv(file = "C:/SIG/R/geobs/data/export_de_base_20230330.csv",
-                     header = TRUE,
-                     sep = ";",
-                     dec = ".")
+bdoe_bzh <- data.table::fread(file = "data/export_de_base_20230330.csv")
 
-roe_lb <- read.csv(file = "C:/SIG/R/geobs/data/lb_temp20221219.csv",
-                  header = TRUE,
-                  sep = ";",
-                  dec = ".",
-                  fileEncoding = "utf8")
+bdoe_pdl <- data.table::fread(file = "data/export_de_base_20230330.csv")
 
-roe_sn <- read.csv(file = "C:/SIG/R/geobs/data/sn_temp20221219.csv",
-                   header = TRUE,
-                   sep = ";",
-                   dec = ".",
-                   encoding = "utf8")
+#roe
+roe_lb <- data.table::fread(file = "data/lb_temp20221219.csv",
+                            encoding = "Latin-1")
 
-#summarise quartiles hauteur de chute
+roe_sn <- data.table::fread(file = "data/sn_temp20221219.csv",
+                            encoding = "Latin-1")
+#?? fusionner les tables
 
+roe_lb_sn <- fusion(roe_lb, roe_sn)
 
-#quart_hc <- summarise(bdoe_bzh, quant = quantile(ouv_hauteur_chute_1, probs = c(0.25, 0.5, 0.75), na.rm = T))
+bdoe_dr2 <- fusion(bdoe_bzh, bdoe_pdl)
 
-#group by
+# données de contexte
 
-table_stat_roe2 <- roe_lb %>%
-group_by(dept_code) %>%
-summarise(moy_hc = mean(table_stat_roe2, hauteur_chute_etiage, na.rm = T))
+liste2 <- sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.shp")
+#tampon_liste2 <- XXX::buffer(liste2, width = 100)
 
-  
-rm(table_stat_roe)
+liste1 <- sf::read_sf(dsn = "data/xxx.shp")
+# tampon_liste2 <- XXX::buffer(liste1, width = 100)
 
-#mise à jour spatiale
-tampon_liste2 <- sf::read_sf(file = "C:/SIG/R/geobs/data/Liste2_LB_2018_holobiotiques.shp")
+zap_pdl <- sf::read_sf(dsn = "data/xxx.shp")
 
-tampon_liste1 <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
+zap_bzh <- sf::read_sf(dsn = "data/xxx.shp")
 
-zap_pdl <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
+sage <- sf::read_sf(dsn = "data/xxx.shp")
 
-zap_bzh <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
+departement <- sf::read_sf(dsn = "data/xxx.shp")
 
-sage <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
-
-departement <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
-
-shapefile <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
+shapefile <- sf::read_sf(dsn = "data/xxx.shp")
 
 # Jointure ROE et BDOE ---------------------------
 
+bd_roe <- join(bdoe_dr2, roe_lb_sn)
+
+#mise à jour spatiale
 
 # Mise à jour Liste1 ---------------------------
 
+faire une jointure spatiale de tampon_liste_1 sur la bd_roe.
+Sélectionner les objets dont le champ classement_liste_1 est null mettre 'Oui' pour ceux qui intersectent avec le tampon_liste_1, 'Non' pour les autres 
 
 # Mise à jour Liste2 et espèces cibles ---------------------------
+faire une jointure spatiale de tampon_liste_2 sur la bd_roe.
+Sélectionner les objets dont le champ classement_liste_2 est null mettre 'Oui' pour ceux qui intersectent avec le tampon_liste_1 et mettre à jour le champs especes_cibles à partir du champ join Esp_arrete, 'Non' pour les autres,  
 
 
 # Mise à jour Sage ---------------------------
@@ -71,10 +66,10 @@ shapefile <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
 # Mise à jour ZAP ---------------------------
 
+# mapview::mapview(tampon_liste2)
+mapview::mapview(tampon_liste2)
 
 # Calcul indicateurs de complétude
-
-
 
 #type d'ouvrage
 ggplot(data = bdoe_bzh, 
@@ -171,4 +166,17 @@ summary(select(bdoe_bzh, ouv_date_hauteur_chute_1))
 summarise(bdoe_bzh, ouv_hauteur_chute_1)
 
 #tables de proportion
+
+#summarise quartiles hauteur de chute
+
+
+#quart_hc <- summarise(bdoe_bzh, quant = quantile(ouv_hauteur_chute_1, probs = c(0.25, 0.5, 0.75), na.rm = T))
+
+#group by
+
+table_stat_roe2 <- roe_lb %>%
+  group_by(dept_code) %>%
+  summarise(moy_hc = mean(table_stat_roe2, hauteur_chute_etiage, na.rm = T))
+
+
 
