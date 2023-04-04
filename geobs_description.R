@@ -37,7 +37,7 @@ roe_sn <- read.csv(file = "C:/SIG/R/geobs/data/sn_temp20221219.csv",
 
 table_stat_roe2 <- roe_lb %>%
 group_by(dept_code) %>%
-summarise(moy_hc = mean(roe_lb,  na.rm = T))
+summarise(moy_hc = mean(table_stat_roe2, hauteur_chute_etiage, na.rm = T))
 
   
 rm(table_stat_roe)
@@ -45,17 +45,17 @@ rm(table_stat_roe)
 #mise à jour spatiale
 tampon_liste2 <- sf::read_sf(file = "C:/SIG/R/geobs/data/Liste2_LB_2018_holobiotiques.shp")
 
-tampon_liste1 <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
+tampon_liste1 <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
-zap_pdl <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
+zap_pdl <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
-zap_bzh <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
+zap_bzh <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
-sage <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
+sage <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
-departement <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
+departement <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
-shapefile <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
+shapefile <- sf::read_sf(file = "C:/SIG/R/geobs/data/xxx.shp")
 
 # Jointure ROE et BDOE ---------------------------
 
@@ -73,15 +73,6 @@ shapefile <- read.shp(file = "C:/SIG/R/geobs/data/xxx.shp")
 
 
 # Calcul indicateurs de complétude
-
-#dates des observations
-ggplot(data = roe_lb, 
-       aes(x = ouv_type_nom)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "Type d'ouvrage",
-       y = "Nombre d'ouvrages",
-       title = "Type d'ouvrage")
 
 
 
@@ -156,7 +147,7 @@ ggplot(data = bdoe_bzh,
 
 #Filtres
 
-bdoe_22 <- filter(bdoe_bzh, ouv_hauteur_chute_1<1 )
+roe_22 <- filter(roe_lb, dept_code == 22 )
 
 #manque_op <- filter(bdoe_bzh,
 
