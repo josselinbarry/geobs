@@ -29,21 +29,20 @@ bdoe_dr2 <- fusion(bdoe_bzh, bdoe_pdl)
 
 # données de contexte
 
-liste2 <- sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.shp")
-#tampon_liste2 <- XXX::buffer(liste2, width = 100)
+liste2 <- sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.gpkg")
 
-liste1 <- sf::read_sf(dsn = "data/xxx.shp")
-# tampon_liste2 <- XXX::buffer(liste1, width = 100)
+tampon_liste2 <- sf::st_buffer(liste2, dist = 100)
 
-zap_pdl <- sf::read_sf(dsn = "data/xxx.shp")
+liste1 <- sf::read_sf(dsn = "data/Liste1_214.17.gpkg")
+tampon_liste1 <- sf::st_buffer(liste1, dist = 100)
 
-zap_bzh <- sf::read_sf(dsn = "data/xxx.shp")
+zap_pdl <- sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.gpkg")
 
-sage <- sf::read_sf(dsn = "data/xxx.shp")
+zap_bzh <- sf::read_sf(dsn = "data/zap_anguille_bzh.gpkg")
+
+sage <- sf::read_sf(dsn = "data/Sage.gpkg")
 
 departement <- sf::read_sf(dsn = "data/xxx.shp")
-
-shapefile <- sf::read_sf(dsn = "data/xxx.shp")
 
 # Jointure ROE et BDOE ---------------------------
 
@@ -62,16 +61,25 @@ Sélectionner les objets dont le champ classement_liste_2 est null mettre 'Oui' 
 
 
 # Mise à jour Sage ---------------------------
-
+faire une jointure spatiale de sage sur la bd_roe
+Sélectionner les objets dont le champ sage est null
 
 # Mise à jour ZAP ---------------------------
 
 # mapview::mapview(tampon_liste2)
-mapview::mapview(tampon_liste2)
+
+mapview::mapview(zap_bzh)
+
+mapview::mapview(liste2)
+
+# alternative carto
+
+ggplot(data = liste2) + geom_sf()
 
 # Calcul indicateurs de complétude
 
 #type d'ouvrage
+
 ggplot(data = bdoe_bzh, 
        aes(x = ouv_type_nom)) +
   geom_bar(fill = "blue") +
