@@ -28,16 +28,27 @@ bdoe_pdl <- data.table::fread(file = "data/export_de_base_20230330.csv")
 #roe
 
 roe_lb <- data.table::fread(file = "data/lb_temp20221219.csv",
-                            encoding = "Latin-1")
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
 
 roe_sn <- data.table::fread(file = "data/sn_temp20221219.csv",
-                            encoding = "Latin-1")
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
 
+roe_lb <- readr::read_csv(file = "data/lb_temp20221219.csv",
+                          locale(encoding = "UTF-8"),
+                           #colClasses = c("date_creation" = "character")
+                           )
+
+roe_sn <- readr::read_csv2(file = "data/sn_temp20221219.csv",
+                            #encoding = "Latin-1",
+                            #colClasses = c("date_creation" = "character")
+                           )
 #?? fusionner les tables
 
-roe_lb_sn <- fusion(roe_lb, roe_sn)
+roe_lb_sn <- dplyr::bind_rows(roe_lb, roe_sn)
 
-bdoe_dr2 <- fusion(bdoe_bzh, bdoe_pdl)
+bdoe_dr2 <- dplyr::bind_rows(bdoe_bzh, bdoe_pdl)
 
 # import données de contexte
 
@@ -58,7 +69,24 @@ departement <- sf::read_sf(dsn = "data/xxx.shp")
 
 # Jointure ROE et BDOE ---------------------------
 
-bd_roe <- join(bdoe_dr2, roe_lb_sn)
+jointure_bdroe <- roe_lb_sn %>% 
+  dplyr::full_join(bdoe_bzh, 
+                   by = c("identifiant_roe" = "cdobstecou"))
+
+doublons_roe_jointure <- jointure_bdroe %>% 
+  group_by(identifiant_roe) %>% 
+  tally() %>% 
+  filter(n > 1)
+
+doublon_bdoe <- bdoe_bzh %>% 
+  group_by(cdobstecou) %>% 
+  tally() %>% 
+  filter(n > 1)
+
+doublon_roe <- roe_lb %>% 
+  group_by(identifiant_roe) %>% 
+  tally() %>% 
+  filter(n > 1)
 
 #mise à jour spatiale
 
@@ -66,6 +94,22 @@ bd_roe <- join(bdoe_dr2, roe_lb_sn)
 
 faire une jointure spatiale de tampon_liste_1 sur la bd_roe.
 Sélectionner les objets dont le champ classement_liste_1 est null mettre 'Oui' pour ceux qui intersectent avec le tampon_liste_1, 'Non' pour les autres 
+
+  
+roe_geom <- roe_lb_sn %>% 
+st_as_sf(coords = c("x_l93", "y_l93"), remove = FALSE, crs = 2154) 
+  
+roe_geom %>% 
+  mapview::mapview()
+
+roe_geom %>% 
+  st_drop_geometry() %>% 
+  View()
+
+plot(st_geometry(roe_geom))
+
+
+test_jointure_satiale <- st_join(roe_lb_sn, tampon_liste1, join = st_intersects)
 
 # Mise à jour Liste2 et espèces cibles ---------------------------
 faire une jointure spatiale de tampon_liste_2 sur la bd_roe.
