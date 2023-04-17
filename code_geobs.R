@@ -1,3 +1,5 @@
+rm(plus_proche_dept)
+
 
 # Library ----
 
@@ -20,12 +22,13 @@ bdoe <- data.table::fread(file = "data/export_de_base_20230417.csv")
 
 ## ROE ----
 
-roe_lb <- readr::read_csv(file = "data/lb_temp20221219.csv",
-                          locale(encoding = "UTF-8"),)
+roe_lb <- data.table::fread(file = "data/lb_temp20230402.csv",
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
 
-roe_sn <- readr::read_csv2(file = "data/sn_temp20221219.csv",
-                           locale(encoding = "UTF-8"),)
-
+roe_sn <- data.table::fread(file = "data/sn_temp20230402.csv",
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
 
 # Fusionner les tables ---- 
 
@@ -39,17 +42,21 @@ roe_geom <- roe_lb_sn %>%
 # Jointure ROE et BDOE ----
 
 bdroe <- roe_geom %>% 
-  dplyr::full_join(bdoe, 
+  dplyr::left_join(bdoe, 
                    by = c("identifiant_roe" = "cdobstecou"))
 
 # Import des données de contexte
 
-tampon_liste2 <- 
-  sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.gpkg") %>% 
+liste2 <- 
+  sf::read_sf(dsn = "data/Liste2_DR2_2018_holobiotiques.shp")
+
+tampon_liste2 <-
   sf::st_buffer(liste2, dist = 100)
 
-tampon_liste1 <- 
-  sf::read_sf(dsn = "data/Liste1_214.17.gpkg") %>% 
+liste1 <- 
+  sf::read_sf(dsn = "data/Liste1_214.17.shp")
+
+tampon_liste1 <-
   sf::st_buffer(liste1, dist = 100)
 
 zap_pdl <- 
@@ -61,28 +68,48 @@ zap_bzh <-
 sage <- 
   sf::read_sf(dsn = "data/Sage.gpkg")
 
-departement <- 
-  sf::read_sf(dsn = "data/xxx.gpkg")
+departements <- 
+  sf::read_sf(dsn = "data/DEPARTEMENT.shp")
 
 ouvrages_prioritaires <-
   data.table::fread(file = "data/20200507_Ouv_prioritaires BZH_PDL.csv")
 
 # Mise à jour des codes départementaux NA et filtre des ouvrages BZH et PDL
 
-## Nearest + jointure
+## Nearest 
 
-#outuput1 <- table avec identifiant_roe et INSEE_DEP jointe
+plus_proche_dept <- sf::st_nearest_feature(x = bdroe,
+                                           y = departements)
 
-## Filtre des ouvrages
+dist <- st_distance(bdroe, departements[plus_proche_dept,], by_element = TRUE)
 
-bdroe <- bdroe %>% 
-  dplyr::full_join(output1, 
-                   by = c("identifiant_roe" = "identifiant_roe")) %>%
+cd_dprt <- bdroe %>% 
+  cbind(dist) %>% 
+  cbind(departements[plus_proche_dept,]) %>% 
+  select(identifiant_roe,
+         dept_le_plus_proche = INSEE_DEP,
+         distance_m = dist) %>% 
+  sf::st_drop_geometry() %>% 
+  mutate(distance_m = round(distance_m))
+
+## Jointure et filtre des ouvrages ?????
+
+bdroe2 <- bdroe %>% 
+  dplyr::left_join(cd_dprt, 
+                   by = c("identifiant_roe" = "identifiant_roe"))
+
+bdroe3 <- bdroe2 %>% 
+  as.character(dept_code = "dept_code") %>% 
+  as.character(dept_le_plus_proche = "dept_le_plus_proche")
+
+bdroe4 <- bdroe3 %>% 
   mutate(dept_code = case_when(
     !is.na(dept_code) ~ dept_code,
-    is.na(dept_code) ~ INSEE_DEP)) %>% 
+    is.na(dept_code) ~ dept_le_plus_proche))
+
+bdroe4 <- bdroe4 %>% 
   dplyr::filter(dept_code %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85')) %>% 
-  dplyr::select(!(c(INSEE_DEP)))
+  dplyr::select(!(c(dept_le_plus_proche, distance_m)))
 
 # Mise à jour Ouvrages prioritaires
 
@@ -190,8 +217,6 @@ mec_atg_hc <-
   mutate(mec_atg_hc = "Oui") %>% 
   select(identifiant_roe, mec_atg_hc) %>% 
   sf::st_drop_geometry()
-
-manque
 
 # Rapatriement des données sur la bdroe
 
