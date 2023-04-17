@@ -50,19 +50,30 @@ bdroe <- roe_geom %>%
 
 # Import des données de contexte
 
-tampon_liste2 <- sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.gpkg") %>% 
+tampon_liste2 <- 
+  sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.gpkg") %>% 
   sf::st_buffer(liste2, dist = 100)
 
-tampon_liste1 <- sf::read_sf(dsn = "data/Liste1_214.17.gpkg") %>% 
+tampon_liste1 <- 
+  sf::read_sf(dsn = "data/Liste1_214.17.gpkg") %>% 
   sf::st_buffer(liste1, dist = 100)
 
-zap_pdl <- sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.gpkg")
+zap_pdl <- 
+  sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.gpkg")
 
-zap_bzh <- sf::read_sf(dsn = "data/zap_anguille_bzh.gpkg")
+zap_bzh <- 
+  sf::read_sf(dsn = "data/zap_anguille_bzh.gpkg")
 
-sage <- sf::read_sf(dsn = "data/Sage.gpkg")
+sage <- 
+  sf::read_sf(dsn = "data/Sage.gpkg")
+
+departement <- 
+  sf::read_sf(dsn = "data/xxx.gpkg")
 
 # Mise à jour spatiale ----
+
+## Mise à jour département
+
 
 ## Mise à jour ZAP
 
@@ -83,21 +94,20 @@ jointure_l1 <-
 
 ## Mise à jour Liste1 ----
 
-st_crs(bdroe) == st_crs(tampon_liste1)
-
-st_geometry(tampon_liste1) <- "geometry"
-
-maj_roe <- bdroe %>% 
-  dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles)
-  
-test_l1 <- lengths(st_intersects(bdroe, sage)) > 0  
-
-maj_roe_l1 <- st_intersection(st_union(maj_roe), st_union(tampon_liste1))
-
-  mutate(liste1 = case_when(Code_numer == NA ~'Non',
-                                       TRUE ~ 'Oui')) %>% 
-  mutate(classement_liste_1 = case_when(classement_liste_1 == NA ~ liste1,
-                                       TRUE ~ classement_liste_1))
+# st_crs(bdroe) == st_crs(tampon_liste1)
+# 
+# st_geometry(tampon_liste1) <- "geometry"
+# 
+# maj_roe <- bdroe %>% 
+#   dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles)
+#   
+# 
+# maj_roe_l1 <- st_intersection(st_union(maj_roe), st_union(tampon_liste1))
+# 
+#   mutate(liste1 = case_when(Code_numer == NA ~'Non',
+#                                        TRUE ~ 'Oui')) %>% 
+#   mutate(classement_liste_1 = case_when(classement_liste_1 == NA ~ liste1,
+#                                        TRUE ~ classement_liste_1))
 
 ## Mise à jour Liste2 et espèces cibles ----
   
@@ -127,7 +137,7 @@ non_valides <-
 non_valides_test <- filter(bdroe, statut_nom == "Non validé", departement %in% c('22', '29', '35', '56'))
 
 manque_hc <- 
-  filter(maj_roe, is.na(hauteur_chute_etiage) & 
+  filter(maj_roe, (is.na(hauteur_chute_etiage) | hauteur_chute_etiage < 0) & 
            (is.na(hauteur_chute_etiage_classe) | hauteur_chute_etiage_classe == "Indéterminée") &
            is.na(ouv_hauteur_chute_1) & 
            is.na(ouv_hauteur_chute_2) &

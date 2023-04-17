@@ -69,6 +69,8 @@ departement <- sf::read_sf(dsn = "data/xxx.shp")
 
 # Jointure ROE et BDOE ---------------------------
 
+
+
 jointure_bdroe <- roe_lb_sn %>% 
   dplyr::full_join(bdoe_bzh, 
                    by = c("identifiant_roe" = "cdobstecou"))
@@ -141,15 +143,15 @@ plot(carte_sage)
 
 #type d'ouvrage
 
-ggplot(data = bdoe_bzh, 
-       aes(x = ouv_type_nom)) +
+ggplot(data = roe_geom, 
+       aes(x = type_nom)) +
   geom_bar(fill = "blue") +
   coord_flip() +
   labs(x = "Type d'ouvrage",
        y = "Nombre d'ouvrages",
        title = "Type d'ouvrage")
 #fpi
-ggplot(data = roe_lb, 
+ggplot(data = roe_geom, 
        aes(x = fpi_nom1)) +
   geom_bar(fill = "blue") +
   coord_flip() +
@@ -158,7 +160,7 @@ ggplot(data = roe_lb,
        title = "Type d'ouvrage")
 
 ###statut/etat
-ggplot(data = roe_lb, 
+ggplot(data = roe_geom, 
        aes(x = etat_nom)) +
   geom_bar(fill = "blue") +
   coord_flip() +
@@ -167,9 +169,9 @@ ggplot(data = roe_lb,
        title = "Statut")
 
 #hauteur de chute
-ggplot(data = bdoe_bzh, 
-       aes(y = ouv_hauteur_chute_1)) +
-  geom_histogram(fill = "blue") +
+ggplot(data = roe_geom, 
+       aes(y = hauteur_chute_etiage_classe)) +
+  geom_bar(fill = "blue") +
   labs(y = "Hauteur de chute",
        x = "Nombre d'ouvrages",
        title = "Hauteur de chute")
