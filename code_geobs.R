@@ -43,9 +43,7 @@ roe_geom <- roe_lb_sn %>%
 
 bdroe <- roe_geom %>% 
   dplyr::full_join(bdoe_bzh, 
-                   by = c("identifiant_roe" = "cdobstecou")) 
-
-%>% 
+                   by = c("identifiant_roe" = "cdobstecou")) %>% 
   dplyr::filter(departement %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85'))
 
 # Import des données de contexte
@@ -72,6 +70,10 @@ departement <-
 
 # Mise à jour spatiale ----
 
+maj_roe <- bdroe %>% 
+  dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, mesure_corrective_devalaison_equipement, mesure_corrective_montaison_equipement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles)
+
+
 ## Mise à jour département
 
 
@@ -97,10 +99,8 @@ jointure_l1 <-
 # st_crs(bdroe) == st_crs(tampon_liste1)
 # 
 # st_geometry(tampon_liste1) <- "geometry"
-# 
-# maj_roe <- bdroe %>% 
-#   dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles)
-#   
+ 
+
 # 
 # maj_roe_l1 <- st_intersection(st_union(maj_roe), st_union(tampon_liste1))
 # 
@@ -115,7 +115,13 @@ st_crs(bdroe) == st_crs(tampon_liste2)
   
 
 #Filtres
-  
+
+non_valides <- 
+  filter(maj_roe, is.na(statut_nom) | statut_nom == "Non validé") %>% 
+  mutate(non_valides = "Oui") %>% 
+  select(identifiant_roe, non_valides) %>% 
+  sf::st_drop_geometry()
+
 manque_type <- 
   filter(maj_roe, is.na(type_nom)) %>% 
   mutate(manque_type = "Oui") %>% 
@@ -127,14 +133,6 @@ manque_etat <-
   mutate(manque_etat = "Oui") %>% 
   select(identifiant_roe, manque_etat) %>% 
   sf::st_drop_geometry()
-
-non_valides <- 
-  filter(maj_roe, is.na(statut_nom) | statut_nom == "Non validé") %>% 
-  mutate(non_valides = "Oui") %>% 
-  select(identifiant_roe, non_valides) %>% 
-  sf::st_drop_geometry()
-
-non_valides_test <- filter(bdroe, statut_nom == "Non validé", departement %in% c('22', '29', '35', '56'))
 
 manque_hc <- 
   filter(maj_roe, (is.na(hauteur_chute_etiage) | hauteur_chute_etiage < 0) & 
@@ -149,22 +147,73 @@ manque_hc <-
   select(identifiant_roe, manque_hc) %>% 
   sf::st_drop_geometry()
   
-# manque_fip <- 
-#   filter(bdroe, is.na(dispo_franch_piscicole_1) &
-#            is.na(dispo_franch_piscicole_1) &
-#            is.na(dispo_franch_piscicole_2) &
-#            is.na(dispo_franch_piscicole_3) &
-#            is.na(dispo_franch_piscicole_4) &
-#            is.na(dispo_franch_piscicole_5) 
-# 
-# 
-roe_22 <- filter(roe_lb, dept_code == 22 )
-  
-manque_op <- filter(bdoe_bzh,
-  
+manque_fip <-
+  filter(maj_roe, is.na(dispo_franch_piscicole_1) &
+           is.na(dispo_franch_piscicole_1) &
+           is.na(dispo_franch_piscicole_2) &
+           is.na(dispo_franch_piscicole_3) &
+           is.na(dispo_franch_piscicole_4) &
+           is.na(dispo_franch_piscicole_5) &
+           is.na(mesure_corrective_devalaison_equipement) & 
+           is.na(mesure_corrective_montaison_equipement)) %>% 
+  mutate(manque_fip = "Oui") %>% 
+  select(identifiant_roe, manque_fip) %>% 
+  sf::st_drop_geometry()
 
-manque_l2 <- filter(bdoe_bzh, classement_liste_2 == "Oui", manque_type)
+manque_atg_l2 <-
+  filter(maj_roe, is.na(avis_technique_global) & bdoe_classement_liste_2 == "Oui" ) %>% 
+  mutate(manque_atg_l2 = "Oui") %>% 
+  select(identifiant_roe, manque_atg_l2) %>% 
+  sf::st_drop_geometry()
+
+mec_atg_hc <-
+  filter(maj_roe, (hauteur_chute_etiage == 0 | 
+                     ouv_hauteur_chute_1 == 0 | 
+                     ouv_hauteur_chute_2 == 0 | 
+                     ouv_hauteur_chute_3 == 0 | 
+                     ouv_hauteur_chute_4 == 0 |  
+                     ouv_hauteur_chute_5 == 0 | 
+                     hauteur_chute_ICE == 0)) %>% 
+  mutate(mec_atg_hc = "Oui") %>% 
+  select(identifiant_roe, mec_atg_hc) %>% 
+  sf::st_drop_geometry()
+
+# Rapatriement des données sur la bdroe
+
+bdroe_maj <- bdroe %>% 
+  dplyr::full_join(non_valides, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
+  dplyr::full_join(manque_etat, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
+  dplyr::full_join(manque_type, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
+  dplyr::full_join(manque_hc, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
+  dplyr::full_join(manque_fip, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
+  dplyr::full_join(manque_atg_l2, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
+  dplyr::full_join(mec_atg_hc, 
+                   by = c("identifiant_roe" = "identifiant_roe")) 
   
+bdroe_maj <- bdroe_maj %>% 
+  mutate(manque_l2 = ifelse(
+    (classement_liste_2 == "Oui" & 
+      (manque_etat == 'Oui' | 
+       manque_type == 'Oui' | 
+       manque_hc == 'Oui' | 
+       non_valides == 'Oui')), 
+    'Oui', ''))
+
+bdroe_maj <- bdroe_maj %>% 
+  mutate(manque_op = ifelse(
+    (ouvrage_prioritaire == "Oui" & 
+       (manque_etat == 'Oui' | 
+          manque_type == 'Oui' | 
+          manque_hc == 'Oui' | 
+          non_valides == 'Oui')), 
+    'Oui', ''))
+
   
   
                  
