@@ -16,9 +16,7 @@ library(stringi)
 
 ## BDOE ----
 
-bdoe_bzh <- data.table::fread(file = "data/export_de_base_20230330.csv")
-
-bdoe_pdl <- data.table::fread(file = "data/export_de_base_20230330.csv")
+bdoe <- data.table::fread(file = "data/export_de_base_20230417.csv")
 
 ## ROE ----
 
@@ -28,23 +26,21 @@ roe_lb <- readr::read_csv(file = "data/lb_temp20221219.csv",
 roe_sn <- readr::read_csv2(file = "data/sn_temp20221219.csv",
                            locale(encoding = "UTF-8"),)
 
+
 # Fusionner les tables ---- 
 
 roe_lb_sn <- dplyr::bind_rows(roe_lb, roe_sn)
 
-bdoe_dr2 <- dplyr::bind_rows(bdoe_bzh, bdoe_pdl)
-
-# Basculer le ROE en sf_geom
+# Basculer le ROE en sf_geom ----
 
 roe_geom <- roe_lb_sn %>% 
   st_as_sf(coords = c("x_l93", "y_l93"), remove = FALSE, crs = 2154) 
   
-# Jointure et sélection des ROE et BDOE ----
+# Jointure ROE et BDOE ----
 
 bdroe <- roe_geom %>% 
-  dplyr::full_join(bdoe_bzh, 
-                   by = c("identifiant_roe" = "cdobstecou")) %>% 
-  dplyr::filter(departement %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85'))
+  dplyr::full_join(bdoe, 
+                   by = c("identifiant_roe" = "cdobstecou"))
 
 # Import des données de contexte
 
@@ -68,16 +64,38 @@ sage <-
 departement <- 
   sf::read_sf(dsn = "data/xxx.gpkg")
 
+ouvrages_prioritaires <-
+  data.table::fread(file = "data/20200507_Ouv_prioritaires BZH_PDL.csv")
+
+# Mise à jour des codes départementaux NA et filtre des ouvrages BZH et PDL
+
+## Nearest + jointure
+
+#outuput1 <- table avec identifiant_roe et INSEE_DEP jointe
+
+## Filtre des ouvrages
+
+bdroe <- bdroe %>% 
+  dplyr::full_join(output1, 
+                   by = c("identifiant_roe" = "identifiant_roe")) %>%
+  mutate(dept_code = case_when(
+    !is.na(dept_code) ~ dept_code,
+    is.na(dept_code) ~ INSEE_DEP)) %>% 
+  dplyr::filter(dept_code %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85')) %>% 
+  dplyr::select(!(c(INSEE_DEP)))
+
+# Mise à jour Ouvrages prioritaires
+
+bdroe <- bdroe %>% 
+  dplyr::full_join(ouvrages_prioritaires, 
+                   by = c("identifiant_roe" = "cdobstecou"))
+
 # Mise à jour spatiale ----
 
 maj_roe <- bdroe %>% 
-  dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, mesure_corrective_devalaison_equipement, mesure_corrective_montaison_equipement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles)
+  dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, mesure_corrective_devalaison_equipement, mesure_corrective_montaison_equipement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles, ouvrage_prioritaire)
 
-
-## Mise à jour département
-
-
-## Mise à jour ZAP
+## Mise à jour ZAP ----
 
 st_crs(bdroe) == st_crs(zap_bzh)
 st_crs(bdroe) == st_crs(zap_pdl)
@@ -86,33 +104,28 @@ st_geometry(roe_geom)
 st_geometry(tampon_liste1)
 st_geometry(tampon_liste2)
 
-## Mise à jour SAGE ----
-
-st_crs(bdroe) == st_crs(sage)
-
-jointure_l1 <- 
-  st_join(bdroe_bzh_pdl, sage, join = st_intersects)
-
-
 ## Mise à jour Liste1 ----
 
-# st_crs(bdroe) == st_crs(tampon_liste1)
-# 
-# st_geometry(tampon_liste1) <- "geometry"
- 
-
-# 
-# maj_roe_l1 <- st_intersection(st_union(maj_roe), st_union(tampon_liste1))
-# 
-#   mutate(liste1 = case_when(Code_numer == NA ~'Non',
-#                                        TRUE ~ 'Oui')) %>% 
-#   mutate(classement_liste_1 = case_when(classement_liste_1 == NA ~ liste1,
-#                                        TRUE ~ classement_liste_1))
+maj_roe <- maj_roe %>%
+  st_join(tampons_l1) %>% 
+  mutate(classement_liste_1 = case_when(
+    !is.na(classement_liste_1) ~ classement_liste_1,
+    is.na(classement_liste_2) & !is.na(Code_numer) ~ 'Oui',
+    is.na(classement_liste_2) & is.na(Code_numer) ~ 'Non')) %>% 
+  dplyr::select(!(c(Code_numer)))
 
 ## Mise à jour Liste2 et espèces cibles ----
-  
-st_crs(bdroe) == st_crs(tampon_liste2)
-  
+
+maj_roe <- maj_roe %>%
+  st_join(tampons_l2) %>% 
+  mutate(classement_liste_2 = case_when(
+    !is.na(classement_liste_2) ~ classement_liste_2,
+    is.na(classement_liste_2) & !is.na(Esp_arrete) ~ 'Oui',
+    is.na(classement_liste_2) & is.na(Esp_arrete) ~ 'Non')) %>% 
+  mutate(especes_cibles = case_when(
+    !is.na(especes_cibles) ~ especes_cibles,
+    is.na(especes_cibles) ~ Esp_arrete))  %>% 
+  dplyr::select(!(c(Esp_arrete)))
 
 #Filtres
 
@@ -178,6 +191,8 @@ mec_atg_hc <-
   select(identifiant_roe, mec_atg_hc) %>% 
   sf::st_drop_geometry()
 
+manque
+
 # Rapatriement des données sur la bdroe
 
 bdroe_maj <- bdroe %>% 
@@ -196,14 +211,19 @@ bdroe_maj <- bdroe %>%
   dplyr::full_join(mec_atg_hc, 
                    by = c("identifiant_roe" = "identifiant_roe")) 
   
+# Mise à jour manque_l2
+
 bdroe_maj <- bdroe_maj %>% 
   mutate(manque_l2 = ifelse(
     (classement_liste_2 == "Oui" & 
       (manque_etat == 'Oui' | 
        manque_type == 'Oui' | 
        manque_hc == 'Oui' | 
-       non_valides == 'Oui')), 
+       non_valides == 'Oui' | 
+       manque_fip == 'Oui')), 
     'Oui', ''))
+
+# Mise à jour manque_op
 
 bdroe_maj <- bdroe_maj %>% 
   mutate(manque_op = ifelse(
@@ -211,10 +231,10 @@ bdroe_maj <- bdroe_maj %>%
        (manque_etat == 'Oui' | 
           manque_type == 'Oui' | 
           manque_hc == 'Oui' | 
-          non_valides == 'Oui')), 
+          non_valides == 'Oui' | 
+          manque_fip == 'Oui')), 
     'Oui', ''))
 
-  
-  
-                 
-  
+# Sauvegarder la couche bdroe_maj
+
+sf::write_sf(obj = bdroe_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20230402.gpkg")
