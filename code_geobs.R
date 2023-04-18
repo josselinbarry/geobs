@@ -1,4 +1,11 @@
-rm(maj_roe)
+# tools
+
+rm(maj_roe3)
+
+test_bdoe <- bdoe %>% 
+group_by(cdobstecou) %>% 
+summarise(n_ligne = n()) %>% 
+  filter(n_ligne>1)
 
 
 # Library ----
@@ -13,6 +20,7 @@ library(RPostgreSQL)
 library(rsdmx)
 library(sf)
 library(stringi)
+packagestringr
 
 # Chargement données obstacles ----
 
@@ -145,15 +153,23 @@ maj_roe <- maj_roe %>%
 
 ## Mise à jour Liste2 et espèces cibles ----
 
-maj_roe <- maj_roe %>%
-  st_join(tampons_l2) %>% 
+maj_roe1 <- maj_roe %>%
+  st_join(tampon_liste2) %>%
+  mutate(long_Esp_arrete = str_length(Esp_arrete))
+
+maj_roe2 <- maj_roe1 %>% 
+  group_by(across(c(-Esp_arrete, - long_Esp_arrete))) 
+
+maj_roe3 <- maj_roe2 %>%
+  filter(long_Esp_arrete == max(long_Esp_arrete, na.rm = TRUE))
+
   mutate(classement_liste_2 = case_when(
     !is.na(classement_liste_2) ~ classement_liste_2,
     is.na(classement_liste_2) & !is.na(Esp_arrete) ~ 'Oui',
     is.na(classement_liste_2) & is.na(Esp_arrete) ~ 'Non')) %>% 
   mutate(especes_cibles = case_when(
     !is.na(especes_cibles) ~ especes_cibles,
-    is.na(especes_cibles) ~ Esp_arrete))  %>% 
+    is.na(especes_cibles) ~ Esp_arrete))  
   dplyr::select(!(c(Esp_arrete)))
 
 #Filtres
