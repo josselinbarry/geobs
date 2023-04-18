@@ -2,8 +2,8 @@
 
 rm(maj_roe3)
 
-test_bdoe <- bdoe %>% 
-group_by(cdobstecou) %>% 
+test_doublons <- maj_roe3 %>% 
+group_by(identifiant_roe) %>% 
 summarise(n_ligne = n()) %>% 
   filter(n_ligne>1)
 
@@ -143,8 +143,10 @@ st_geometry(tampon_liste2)
 
 ## Mise à jour Liste1 ----
 
-maj_roe <- maj_roe %>%
+maj_roe_a <- maj_roe %>%
   st_join(tampon_liste1) %>% 
+  group_by(identifiant_roe) %>% 
+  distinct() %>% 
   mutate(classement_liste_1 = case_when(
     !is.na(classement_liste_1) ~ classement_liste_1,
     is.na(classement_liste_1) & !is.na(Code_numer) ~ 'Oui',
@@ -155,22 +157,24 @@ maj_roe <- maj_roe %>%
 
 maj_roe1 <- maj_roe %>%
   st_join(tampon_liste2) %>%
-  mutate(long_Esp_arrete = str_length(Esp_arrete))
+  mutate(long_Esp_arrete = str_length(coalesce(Esp_arrete, "0")))
 
 maj_roe2 <- maj_roe1 %>% 
   group_by(across(c(-Esp_arrete, - long_Esp_arrete))) 
 
 maj_roe3 <- maj_roe2 %>%
-  filter(long_Esp_arrete == max(long_Esp_arrete, na.rm = TRUE))
+  filter(long_Esp_arrete == max(long_Esp_arrete, na.rm = TRUE)) %>% 
+  distinct(identifiant_roe)
 
+maj_roe4 <- maj_roe3 %>%
   mutate(classement_liste_2 = case_when(
     !is.na(classement_liste_2) ~ classement_liste_2,
     is.na(classement_liste_2) & !is.na(Esp_arrete) ~ 'Oui',
     is.na(classement_liste_2) & is.na(Esp_arrete) ~ 'Non')) %>% 
   mutate(especes_cibles = case_when(
     !is.na(especes_cibles) ~ especes_cibles,
-    is.na(especes_cibles) ~ Esp_arrete))  
-  dplyr::select(!(c(Esp_arrete)))
+    (is.na(especes_cibles) | especes_cibles == "") ~ Esp_arrete))  %>% 
+  dplyr::select(!(c(fid:Lamproie_m, long_Esp_arrete)))
 
 #Filtres
 
