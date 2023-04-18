@@ -163,6 +163,8 @@ maj_roe <- bdroe %>%
     ouvrage_prioritaire
   )
 
+
+
 # examen des duplicats ---------
 identifiants_roe_dupliques <- maj_roe %>% 
   sf::st_drop_geometry() %>% 
@@ -171,12 +173,31 @@ identifiants_roe_dupliques <- maj_roe %>%
   filter(n > 1) %>% 
   pull(identifiant_roe)
 
-# fin examen des duplicats
-
-
 maj_roe_avec_duplicats <- maj_roe %>% 
   filter(identifiant_roe %in%  identifiants_roe_dupliques)
 
+# fin examen des duplicats
+
+
+# ajout des tampons liste 2 -------
+maj_roe1 <- maj_roe %>%
+  st_join(tampon_liste2) %>%
+  mutate(long_Esp_arrete = str_length(coalesce(Esp_arrete, "0"))) %>% 
+  group_by(identifiant_roe) %>% 
+    filter(long_Esp_arrete == max(long_Esp_arrete)) %>% 
+  select(identifiant_roe, Esp_arrete) %>% # on ne garde que les colonnes d'intérêt
+  distinct() # dédoublonage
+
+
+
+
+
+
+
+
+# sauvegarde ----
+save(maj_roe,
+     file = "data/outputs/maj_roe.RData")
 
 ## Mise à jour ZAP ----
 
