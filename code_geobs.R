@@ -1,4 +1,4 @@
-rm(plus_proche_dept)
+rm(maj_roe)
 
 
 # Library ----
@@ -48,7 +48,7 @@ bdroe <- roe_geom %>%
 # Import des données de contexte
 
 liste2 <- 
-  sf::read_sf(dsn = "data/Liste2_DR2_2018_holobiotiques.shp")
+  sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.shp")
 
 tampon_liste2 <-
   sf::st_buffer(liste2, dist = 100)
@@ -99,17 +99,19 @@ bdroe2 <- bdroe %>%
                    by = c("identifiant_roe" = "identifiant_roe"))
 
 bdroe3 <- bdroe2 %>% 
-  as.character(dept_code = "dept_code") %>% 
-  as.character(dept_le_plus_proche = "dept_le_plus_proche")
+  mutate(dept_code = as.character(dept_code)) %>% 
+  mutate(dept_le_plus_proche = as.character(dept_le_plus_proche))
 
 bdroe4 <- bdroe3 %>% 
   mutate(dept_code = case_when(
     !is.na(dept_code) ~ dept_code,
     is.na(dept_code) ~ dept_le_plus_proche))
 
-bdroe4 <- bdroe4 %>% 
+bdroe5 <- bdroe4 %>% 
   dplyr::filter(dept_code %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85')) %>% 
   dplyr::select(!(c(dept_le_plus_proche, distance_m)))
+
+bdroe <- bdroe5
 
 # Mise à jour Ouvrages prioritaires
 
@@ -134,12 +136,12 @@ st_geometry(tampon_liste2)
 ## Mise à jour Liste1 ----
 
 maj_roe <- maj_roe %>%
-  st_join(tampons_l1) %>% 
+  st_join(tampon_liste1) %>% 
   mutate(classement_liste_1 = case_when(
     !is.na(classement_liste_1) ~ classement_liste_1,
-    is.na(classement_liste_2) & !is.na(Code_numer) ~ 'Oui',
-    is.na(classement_liste_2) & is.na(Code_numer) ~ 'Non')) %>% 
-  dplyr::select(!(c(Code_numer)))
+    is.na(classement_liste_1) & !is.na(Code_numer) ~ 'Oui',
+    is.na(classement_liste_1) & is.na(Code_numer) ~ 'Non')) %>% 
+  dplyr::select(!(c(Code_numer:CE_RESBIO)))
 
 ## Mise à jour Liste2 et espèces cibles ----
 
