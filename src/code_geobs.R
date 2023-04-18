@@ -1,26 +1,25 @@
 # tools
 
-rm(maj_roe3)
-
-test_doublons <- maj_roe3 %>% 
-group_by(identifiant_roe) %>% 
-summarise(n_ligne = n()) %>% 
-  filter(n_ligne>1)
+# rm(maj_roe3)
+# 
+# test_doublons <- maj_roe3 %>% 
+# group_by(identifiant_roe) %>% 
+# summarise(n_ligne = n()) %>% 
+#   filter(n_ligne>1)
 
 
 # Library ----
 
 library(tidyverse)
-library(lubridate)
-library(RcppRoll)
-library(DT)
-library(readxl)
-library(dbplyr)
-library(RPostgreSQL)
-library(rsdmx)
+#library(lubridate)
+#library(RcppRoll)
+#library(DT)
+#library(readxl)
+#library(dbplyr)
+#library(RPostgreSQL)
+#library(rsdmx)
 library(sf)
-library(stringi)
-packagestringr
+#library(stringi)
 
 # Chargement données obstacles ----
 
@@ -67,8 +66,13 @@ liste1 <-
 tampon_liste1 <-
   sf::st_buffer(liste1, dist = 100)
 
+# pb ici
 zap_pdl <- 
-  sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.gpkg")
+  sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.MAP")
+
+test = st_read('data/Zone_Prioritaire_Anguille_PDL.MAP')
+
+
 
 zap_bzh <- 
   sf::read_sf(dsn = "data/zap_anguille_bzh.gpkg")
@@ -129,8 +133,50 @@ bdroe <- bdroe %>%
 
 # Mise à jour spatiale ----
 
-maj_roe <- bdroe %>% 
-  dplyr::select(identifiant_roe, statut_nom, etat_nom, type_nom, fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4, fpi_nom5, hauteur_chute_etiage, hauteur_chute_etiage_classe, ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4, ouv_hauteur_chute_5, hauteur_chute_ICE, ouv_arasement, ouv_derasement, mesure_corrective_devalaison_equipement, mesure_corrective_montaison_equipement, avis_technique_global, classement_liste_1, classement_liste_2, especes_cibles, ouvrage_prioritaire)
+maj_roe <- bdroe %>%
+  dplyr::select(
+    identifiant_roe,
+    statut_nom,
+    etat_nom,
+    type_nom,
+    fpi_nom1,
+    fpi_nom2,
+    fpi_nom3,
+    fpi_nom4,
+    fpi_nom5,
+    hauteur_chute_etiage,
+    hauteur_chute_etiage_classe,
+    ouv_hauteur_chute_1,
+    ouv_hauteur_chute_2,
+    ouv_hauteur_chute_3,
+    ouv_hauteur_chute_4,
+    ouv_hauteur_chute_5,
+    hauteur_chute_ICE,
+    ouv_arasement,
+    ouv_derasement,
+    mesure_corrective_devalaison_equipement,
+    mesure_corrective_montaison_equipement,
+    avis_technique_global,
+    classement_liste_1,
+    classement_liste_2,
+    especes_cibles,
+    ouvrage_prioritaire
+  )
+
+# examen des duplicats ---------
+identifiants_roe_dupliques <- maj_roe %>% 
+  sf::st_drop_geometry() %>% 
+  group_by(identifiant_roe) %>% 
+    tally() %>% 
+  filter(n > 1) %>% 
+  pull(identifiant_roe)
+
+# fin examen des duplicats
+
+
+maj_roe_avec_duplicats <- maj_roe %>% 
+  filter(identifiant_roe %in%  identifiants_roe_dupliques)
+
 
 ## Mise à jour ZAP ----
 
