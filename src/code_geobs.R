@@ -1,8 +1,8 @@
-HEHE !!
+
 
 # tools
 
-# rm(maj_roe3)
+rm(bdroe3)
 # 
 # test_doublons <- maj_roe3 %>% 
 # group_by(identifiant_roe) %>% 
@@ -89,7 +89,7 @@ ouvrages_prioritaires <-
   data.table::fread(file = "data/20200507_Ouv_prioritaires BZH_PDL.csv")
 
 # Mise à jour des codes départementaux NA et filtre des ouvrages BZH et PDL
-
+#Est-ce utile ? le champ semble être complet
 ## Nearest 
 
 plus_proche_dept <- sf::st_nearest_feature(x = bdroe,
@@ -114,18 +114,14 @@ bdroe2 <- bdroe %>%
 
 bdroe3 <- bdroe2 %>% 
   mutate(dept_code = as.character(dept_code)) %>% 
-  mutate(dept_le_plus_proche = as.character(dept_le_plus_proche))
-
-bdroe4 <- bdroe3 %>% 
+  mutate(dept_le_plus_proche = as.character(dept_le_plus_proche)) %>% 
   mutate(dept_code = case_when(
     !is.na(dept_code) ~ dept_code,
-    is.na(dept_code) ~ dept_le_plus_proche))
-
-bdroe5 <- bdroe4 %>% 
+    is.na(dept_code) ~ dept_le_plus_proche)) %>% 
   dplyr::filter(dept_code %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85')) %>% 
   dplyr::select(!(c(dept_le_plus_proche, distance_m)))
 
-bdroe <- bdroe5
+bdroe <- bdroe3
 
 # Mise à jour Ouvrages prioritaires
 
@@ -279,14 +275,13 @@ manque_hc <-
   sf::st_drop_geometry()
   
 manque_fip <-
-  filter(maj_roe, is.na(dispo_franch_piscicole_1) &
-           is.na(dispo_franch_piscicole_1) &
-           is.na(dispo_franch_piscicole_2) &
-           is.na(dispo_franch_piscicole_3) &
-           is.na(dispo_franch_piscicole_4) &
-           is.na(dispo_franch_piscicole_5) &
-           is.na(mesure_corrective_devalaison_equipement) & 
-           is.na(mesure_corrective_montaison_equipement)) %>% 
+  filter(maj_roe, (is.na(fpi_nom1) | fpi_nom1 == "") &
+           (is.na(fpi_nom2) | fpi_nom2 == "") &
+           (is.na(fpi_nom3) | fpi_nom3 == "") &
+           (is.na(fpi_nom4) | fpi_nom4 == "") &
+           (is.na(fpi_nom5) | fpi_nom5 == "") &
+           (is.na(mesure_corrective_devalaison_equipement) | mesure_corrective_devalaison_equipement == "") & 
+           (is.na(mesure_corrective_montaison_equipement)) | mesure_corrective_montaison_equipement == "") %>% 
   mutate(manque_fip = "Oui") %>% 
   select(identifiant_roe, manque_fip) %>% 
   sf::st_drop_geometry()
