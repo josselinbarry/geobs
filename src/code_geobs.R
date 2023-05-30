@@ -2,12 +2,12 @@
 
 # tools
 
-rm(bdroe3)
+ rm(roe_unique)
 # 
-# test_doublons <- maj_roe3 %>% 
-# group_by(identifiant_roe) %>% 
-# summarise(n_ligne = n()) %>% 
-#   filter(n_ligne>1)
+test_doublons_bdroe <- bdroe %>% 
+group_by(identifiant_roe) %>% 
+summarise(n_ligne = n()) %>% 
+filter(n_ligne>1)
 
 
 # Library ----
@@ -29,7 +29,7 @@ library(sf)
 
 bdoe <- data.table::fread(file = "data/export_de_base_20230417.csv")
 
-## ROE ----
+## ROE par bassin ----
 
 roe_lb <- data.table::fread(file = "data/lb_temp20230402.csv",
                             encoding = "Latin-1",
@@ -39,22 +39,28 @@ roe_sn <- data.table::fread(file = "data/sn_temp20230402.csv",
                             encoding = "Latin-1",
                             colClasses = c("date_creation" = "character"))
 
-# Fusionner les tables ---- 
+# Retravailler les données ---- 
+
+## PB Supprimer les doublons de la BDOE ----
+
+bdoe_unique <- dplyr::distinct(bdoe)
+
+## Fusionner les ROE par bassin ---- 
 
 roe_lb_sn <- dplyr::bind_rows(roe_lb, roe_sn)
 
-# Basculer le ROE en sf_geom ----
+## Basculer le ROE en sf_geom ----
 
 roe_geom <- roe_lb_sn %>% 
   st_as_sf(coords = c("x_l93", "y_l93"), remove = FALSE, crs = 2154) 
-  
-# Jointure ROE et BDOE ----
+
+## Jointure ROE et BDOE ----
 
 bdroe <- roe_geom %>% 
   dplyr::left_join(bdoe, 
                    by = c("identifiant_roe" = "cdobstecou"))
 
-# Import des données de contexte
+# Import des données de contexte ----
 
 liste2 <- 
   sf::read_sf(dsn = "data/Liste2_LB_2018_holobiotiques.shp")
@@ -69,18 +75,18 @@ tampon_liste1 <-
   sf::st_buffer(liste1, dist = 100)
 
 # pb ici
-zap_pdl <- 
-  sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.MAP")
+# zap_pdl <- 
+#  sf::read_sf(dsn = "data/Zone_Prioritaire_Anguille_PDL.MAP")
 
-test = st_read('data/Zone_Prioritaire_Anguille_PDL.MAP')
+# test = st_read('data/Zone_Prioritaire_Anguille_PDL.MAP')
 
 
 
-zap_bzh <- 
-  sf::read_sf(dsn = "data/zap_anguille_bzh.gpkg")
+# zap_bzh <- 
+#  sf::read_sf(dsn = "data/zap_anguille_bzh.gpkg")
 
-sage <- 
-  sf::read_sf(dsn = "data/Sage.gpkg")
+#sage <- 
+#  sf::read_sf(dsn = "data/Sage.gpkg")
 
 departements <- 
   sf::read_sf(dsn = "data/DEPARTEMENT.shp")
@@ -89,7 +95,7 @@ ouvrages_prioritaires <-
   data.table::fread(file = "data/20200507_Ouv_prioritaires BZH_PDL.csv")
 
 # Mise à jour des codes départementaux NA et filtre des ouvrages BZH et PDL
-#Est-ce utile ? le champ semble être complet
+#Est-ce utile (calcul ? appliqué à BDOE ?) ? le champ semble être complet
 ## Nearest 
 
 plus_proche_dept <- sf::st_nearest_feature(x = bdroe,
@@ -177,20 +183,14 @@ maj_roe_avec_duplicats <- maj_roe %>%
 # fin examen des duplicats
 
 
-# ajout des tampons liste 2 -------
-maj_roe1 <- maj_roe %>%
+# ajout des informations liste 2 non renseignées -------
+maj_roe_l2 <- maj_roe %>%
   st_join(tampon_liste2) %>%
   mutate(long_Esp_arrete = str_length(coalesce(Esp_arrete, "0"))) %>% 
   group_by(identifiant_roe) %>% 
     filter(long_Esp_arrete == max(long_Esp_arrete)) %>% 
   select(identifiant_roe, Esp_arrete) %>% # on ne garde que les colonnes d'intérêt
   distinct() # dédoublonage
-
-
-
-
-
-
 
 
 # sauvegarde ----
@@ -208,7 +208,7 @@ st_geometry(tampon_liste2)
 
 ## Mise à jour Liste1 ----
 
-maj_roe_a <- maj_roe %>%
+maj_roe_l1 <- maj_roe %>%
   st_join(tampon_liste1) %>% 
   group_by(identifiant_roe) %>% 
   distinct() %>% 
@@ -231,7 +231,7 @@ maj_roe3 <- maj_roe2 %>%
   filter(long_Esp_arrete == max(long_Esp_arrete, na.rm = TRUE)) %>% 
   distinct(identifiant_roe)
 
-maj_roe4 <- maj_roe3 %>%
+maj_roe_spl2 <- maj_roe3 %>%
   mutate(classement_liste_2 = case_when(
     !is.na(classement_liste_2) ~ classement_liste_2,
     is.na(classement_liste_2) & !is.na(Esp_arrete) ~ 'Oui',
@@ -287,7 +287,7 @@ manque_fip <-
   sf::st_drop_geometry()
 
 manque_atg_l2 <-
-  filter(maj_roe, is.na(avis_technique_global) & bdoe_classement_liste_2 == "Oui" ) %>% 
+  filter(maj_roe, is.na(avis_technique_global) & classement_liste_2 == "Oui" ) %>% 
   mutate(manque_atg_l2 = "Oui") %>% 
   select(identifiant_roe, manque_atg_l2) %>% 
   sf::st_drop_geometry()
