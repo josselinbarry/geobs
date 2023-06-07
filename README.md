@@ -94,7 +94,7 @@ L'outil permet d'exporter une couche de la "BDROE" interne au format géopackage
 
 Cette couche est ensuite diffusée aux agents en charge du renseignement des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiée. 
 
-## Analyse de la base de données
+## Analyse de la base de données (en cours de réalisation)
 
 ### Valorisation régionale des principales informations contenues dans les bases ROE et BDOE
 
@@ -126,4 +126,4 @@ Répartition des ouvrages selon le système de franchissement piscicole renseign
 
 
 
-<right>Josselin BARRY, OFB, 2023
+Josselin BARRY, OFB, Juin 2023
