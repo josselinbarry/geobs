@@ -94,36 +94,42 @@ L'outil permet d'exporter une couche de la "BDROE" interne au format géopackage
 
 Cette couche est ensuite diffusée aux agents en charge du renseignement des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiée. 
 
-## Analyse de la base de données (en cours de réalisation)
+## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (en cours de réalisation)
 
-### Valorisation régionale des principales informations contenues dans les bases ROE et BDOE
-
-#### Etat
+### Etat
 
 Répartition des ouvrages selon leur état renseigné.
 
-#### Type
+### Type
 
 Répartition des ouvrages selon leur type renseigné.
 
-#### Hauteur de chute
+### Hauteur de chute
 
 Répartition des ouvrages selon leur hauteur de chute renseigné.
 
-#### Usages
+### Usages
 
 Répartition des ouvrages selon leurs usages renseignés.
 
-#### Avis Technique Global
+### Avis Technique Global
 
 Répartition des ouvrages selon leur Avis Technique Global renseigné.
 
-#### Ouvrage de franchissement piscicole
+### Ouvrage de franchissement piscicole
 
 Répartition des ouvrages selon le système de franchissement piscicole renseigné.
 
 ### Chronologie de remplissage (nouvel ouvrage, modification, hauteurs de chute, ...)
 
+Dynamique de renseignement des champs dates. 
 
+## Améliorations envisagées (en cours de réalisation)
+
+### Ecriture des scripts "Valorisation régionale des principales informations contenues dans les bases ROE et BDOE"
+
+### Jointure des données de contexte :
+#### ZAP
+#### SAGE
 
 Josselin BARRY, OFB, Juin 2023
