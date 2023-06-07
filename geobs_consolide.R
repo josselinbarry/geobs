@@ -1,15 +1,15 @@
 # Library ----
 
 library(tidyverse)
-#library(lubridate)
-#library(RcppRoll)
-#library(DT)
-#library(readxl)
-#library(dbplyr)
-#library(RPostgreSQL)
-#library(rsdmx)
+library(lubridate)
+library(RcppRoll)
+library(DT)
+library(readxl)
+library(dbplyr)
+library(RPostgreSQL)
+library(rsdmx)
 library(sf)
-#library(stringi)
+library(stringi)
 library(plyr)
 
 
@@ -126,7 +126,6 @@ maj_roe_l2 <- maj_roe %>%
 
 
 ## Mise à jour des informations liste 2 non renseignées -------
-# BUG
 
 bdroe_dr2 <- bdroe_dr2 %>%
   dplyr::full_join(maj_roe_l2, 
@@ -163,7 +162,7 @@ non_valides <-
   filter(bdroe_dr2, (is.na(statut_nom) | statut_nom == "Non validé" | statut_nom == "")) %>% 
   mutate(non_valides = 1) %>% 
   mutate(non_valides = as.numeric(non_valides)) %>%
-  select(identifiant_roe, non_valides, dept_code) %>% 
+  select(identifiant_roe, non_valides) %>% 
   sf::st_drop_geometry()
 
 manque_type <- 
@@ -342,12 +341,101 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
 
 # Sauvegarder la couche bdroe_dr2_maj
 
-sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20230402.gpkg")
+sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/stat_BDROE_interne_BZH_PDL_20230402.gpkg")
 
-# Calcul des variables par département
+# Calcul des variables par département BUG
 
-bilan_non_valide <-non_valides %>%
+#bilan_non_valide <-non_valides %>%
+#group_by(dept_code) %>%
+#count()
+
+analyse_stat_bdroe <- bdroe_dr2_maj %>%
+  select(dept_code, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
+  mutate(dept_code = as.numeric(dept_code )) %>%
   group_by(dept_code) %>%
-  count()
+  summarise(stat_manque_hc = sum(bdroe_dr2_maj, manque_hc, na.rm = T))
 
-            
+variante_analyse_stat_bdroe <- bdroe_dr2_maj %>% 
+  select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
+  group_by(dept_nom) %>%
+  summarise(nb_total_manque_op = sum(manque_op, na.rm = T),
+            nb_total_manque_l2 = sum(manque_l2, na.rm = T), 
+            nb_total_manque_etat = sum(manque_etat, na.rm = T), 
+            nb_total_manque_type = sum(manque_type, na.rm = T), 
+            nb_total_manque_hc = sum(manque_hc, na.rm = T), 
+            nb_total_manque_fip = sum(manque_fip, na.rm = T),
+            nb_total_non_valide = sum(non_valides, na.rm = T), 
+            nb_total_manque_atg_l2 = sum(manque_atg_l2, na.rm = T),
+            nb_total_mec_atg_hc = sum(mec_atg_hc, na.rm = T),
+            nb_total_derasement_solde = sum(derasement_solde, na.rm = T))
+
+
+# Valorisation régionale de la "BDROE"
+
+## Etat
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = etat_nom)) +
+  geom_bar(fill = "blue") +
+  coord_flip() +
+  labs(x = "Statut de l'ouvrage",
+       y = "Nombre d'ouvrages",
+       title = "Etat")
+
+## Type
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = type_nom)) +
+  geom_bar(fill = "blue") +
+  coord_flip() +
+  labs(x = "Type d'ouvrage",
+       y = "Nombre d'ouvrages",
+       title = "Type d'ouvrage")
+
+## Hauteur de chute
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(y = hauteur_chute_etiage_classe)) +
+  geom_bar(fill = "blue") +
+  labs(y = "Hauteur de chute",
+       x = "Nombre d'ouvrages",
+       title = "Hauteur de chute")
+
+## FPI
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = fpi_nom1)) +
+  geom_bar(fill = "blue") +
+  coord_flip() +
+  labs(x = "Type de franchissement piscicole",
+       y = "Nombre d'ouvrages",
+       title = "Type de franchissement piscicole")
+
+## ATG
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = avis_technique_global)) +
+  geom_bar(fill = "blue") +
+  coord_flip() +
+  labs(x = "ATG",
+       y = "Nombre d'ouvrages",
+       title = "Avis Technique Global")
+
+## Usages
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = usage_nom1)) +
+  geom_bar(fill = "blue") +
+  coord_flip() +
+  labs(x = "Type d'usage",
+       y = "Nombre d'ouvrages",
+       title = "Type d'usage")
+
+## Dynamique de renseignement
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = mutate(date_modification = as.date(date_modification)))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'ouvrages",
+       title = "Dynamique de renseignement : date de modification")   
