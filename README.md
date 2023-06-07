@@ -52,8 +52,8 @@ L'outil permet de conserver l'information contenue dans le BDOE, quand elle exis
 ### Données essentielles 
 
 #### Non validés (non_valides)
-
 Mise en évidence (0/1) des ouvrages dont le statut du ROE est NULL ou non validé (statut_nom).
+<img width="229" alt="non_valides" src="https://github.com/josselinbarry/geobs/assets/129364893/c8988869-e91e-4364-a1d7-6dac6dd92289">
 
 #### Type (manque_type)
 
