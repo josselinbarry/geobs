@@ -349,13 +349,7 @@ sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/stat_BDROE_interne_BZH_PDL
 #group_by(dept_code) %>%
 #count()
 
-analyse_stat_bdroe <- bdroe_dr2_maj %>%
-  select(dept_code, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
-  mutate(dept_code = as.numeric(dept_code )) %>%
-  group_by(dept_code) %>%
-  summarise(stat_manque_hc = sum(bdroe_dr2_maj, manque_hc, na.rm = T))
-
-variante_analyse_stat_bdroe <- bdroe_dr2_maj %>% 
+analyse_stat_bdroe <- bdroe_dr2_maj %>% 
   select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
   group_by(dept_nom) %>%
   summarise(nb_total_manque_op = sum(manque_op, na.rm = T),
