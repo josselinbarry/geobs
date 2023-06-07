@@ -20,7 +20,7 @@ Deux dernières analyses, plus secondaires, viennent compléter ces premiers él
 - Pas d'Avis Technique Global (ATG) pour un ouvrage situé sur un tronçon classé en Liste 2 au titre de l'article L.214-17 (manque_atg_l2),
 - Pas de cohérence entre la hauteur de chute (nulle), l'état (entièrement détruit ou dérasé) et l'ATG (non renseigné) (mec_hc_atg).
 
-## Import des données (ROE, BDOE, données de contexte)
+## Import des données 
 
 #### ROE
 
@@ -30,14 +30,21 @@ La base de donnée ROE est diffusée, dans sa version interne, deux à trois foi
 
 La BDOE est accesible depuis le site geobs : https://geobs.eaufrance.fr/geobs/export.action
 
+#### Données de contexte
+
+Pour générer son analyse, l'outil nécessite de disposer des données de contexte suivantes : 
+- Couche géographique des tronçons classés en Liste 1 au titre de l'article L.214-17 
+- Couche géographique des tronçons classés en Liste 2 au titre de l'article L.214-17 
+- Table des ouvrages classés comme Ouvrages Prioritaires
+
 ## Jointure et filtre des bases (ROE et BDOE, régions bretagne et pays de la loire)
 
-L'outil assure la jointure des bases entre elles puis filtre les ouvrages concernés par les régions Bretagne et Pays de la Loire.
+L'outil assure la jointure des bases entre elles puis filtre les ouvrages situés dans les régions Bretagne et Pays de la Loire.
 
 ## Ajout d'information (L1, L2)
 
-L'information qui indique le rattachement d'un ouvrage à un tronçon classé en Liste 1  ou en Liste 2 au titre de l'article L.214-17 est stockée dans la BDOE (classement_liste_1 et classement_liste_2).
-Nous ne disposons donc pas de l'information pour l'ensemble des ouvrages inscrits dans le ROE.
+L'information qui indique le rattachement d'un ouvrage à un tronçon classé en Liste 1  ou en Liste 2 au titre de l'article L.214-17 est stockée dans la BDOE (classement_liste_1 et classement_liste_2). Nous ne disposons donc pas de l'information pour l'ensemble des ouvrages inscrits dans le ROE.
+
 L'outil permet de conserver l'information contenue dans le BDOE, quand elle existe, et à défaut renseigne l'information par intersection avec un tampon de 50m autour des listes respectives. Cette démarche peut inclure ou exclure des ouvrages par erreur.  
 
 ## Calcul des indicateurs de complétude
@@ -94,35 +101,35 @@ L'outil permet d'exporter une couche de la "BDROE" interne au format géopackage
 
 Cette couche est ensuite diffusée aux agents en charge du renseignement des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiée. 
 
-## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (en cours de réalisation)
+*## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (en cours de réalisation)
 
-### Etat
+*### Etat
 
-Répartition des ouvrages selon leur état renseigné.
+*Répartition des ouvrages selon leur état renseigné.
 
-### Type
+*### Type
 
-Répartition des ouvrages selon leur type renseigné.
+*Répartition des ouvrages selon leur type renseigné.
 
-### Hauteur de chute
+*### Hauteur de chute
 
-Répartition des ouvrages selon leur hauteur de chute renseigné.
+*Répartition des ouvrages selon leur hauteur de chute renseigné.
 
-### Usages
+*### Usages
 
-Répartition des ouvrages selon leurs usages renseignés.
+*Répartition des ouvrages selon leurs usages renseignés.
 
-### Avis Technique Global
+*### Avis Technique Global
 
-Répartition des ouvrages selon leur Avis Technique Global renseigné.
+*Répartition des ouvrages selon leur Avis Technique Global renseigné.
 
-### Ouvrage de franchissement piscicole
+*### Ouvrage de franchissement piscicole
 
-Répartition des ouvrages selon le système de franchissement piscicole renseigné.
+*Répartition des ouvrages selon le système de franchissement piscicole renseigné.
 
-### Chronologie de remplissage (nouvel ouvrage, modification, hauteurs de chute, ...)
+*### Chronologie de remplissage (nouvel ouvrage, modification, hauteurs de chute, ...)
 
-Dynamique de renseignement des champs dates. 
+*Dynamique de renseignement des champs dates. 
 
 ## Améliorations envisagées (en cours de réalisation)
 
