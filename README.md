@@ -53,23 +53,32 @@ L'outil permet de conserver l'information contenue dans le BDOE, quand elle exis
 
 #### Non validés (non_valides)
 Mise en évidence (0/1) des ouvrages dont le statut du ROE est NULL ou non validé (statut_nom).
-<img width="229" alt="non_valides" src="https://github.com/josselinbarry/geobs/assets/129364893/c8988869-e91e-4364-a1d7-6dac6dd92289">
+
+<img width="200" alt="non_valides" src="https://github.com/josselinbarry/geobs/assets/129364893/0f3a150f-8ac8-4421-b808-39755af73a7c">
 
 #### Type (manque_type)
 
 Mise en évidence (0/1) des ouvrages dont le type du ROE est NULL (type_nom).
 
+<img width="200" alt="manque_type" src="https://github.com/josselinbarry/geobs/assets/129364893/d470a243-38a4-4fcf-ba05-233f2c5d9385">
+
 #### Etat (manque_etat)
 
 Mise en évidence (0/1) des ouvrages dont l'Etat du ROE est NULL (etat_nom).
+
+<img width="200" alt="manque_etat" src="https://github.com/josselinbarry/geobs/assets/129364893/8bb1c71a-834a-4cd9-9289-e66a7f23e28a">
 
 #### Franchissement piscicole (manque_fip)
 
 Mise en évidence (0/1) des ouvrages dont l'existance d'un amménagement de franchissement piscicole n'est pas connue dans le ROE (fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4 et fpi_nom5) et la BDOE (mesure_corrective_devalaison_equipement et mesure_corrective_montaison_equipement).
 
+<img width="200" alt="manque_fip" src="https://github.com/josselinbarry/geobs/assets/129364893/a52604b6-ddb3-4ab6-a21b-c2ade0169806">
+
 #### Hauteur de chute
 
 Mise en évidence (0/1) des ouvrages dont l'existance d'un amménagement de franchissement piscicole n'est pas connue dans le ROE (hauteur_chute_etiage et hauteur_chute_etiage_classe), la BDOE (ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4 et ouv_hauteur_chute_5) et ICE (hauteur_chute_ICE).
+
+<img width="200" alt="manque_hc" src="https://github.com/josselinbarry/geobs/assets/129364893/81ed2b95-9b6c-4423-930f-36828be8b6f9">
 
 ### Données de priorisation
 
@@ -77,9 +86,13 @@ Mise en évidence (0/1) des ouvrages dont l'existance d'un amménagement de fran
 
 Mise en évidence (0/1) des ouvrages situés en Liste 2 et qui présentent au moins un manque identifié sur l'une des 5 données essentielles.
 
+<img width="200" alt="manque_l2" src="https://github.com/josselinbarry/geobs/assets/129364893/3b53cd93-3164-42ad-ba07-ef959187baee">
+
 #### Manque identifié sur Ouvrage Prioritaire (manque_op)
 
 Mise en évidence (0/1) des ouvrages classés comme Ouvrages Prioritaires et qui présentent au moins un manque identifié sur l'une des 5 données essentielles.
+
+<img width="200" alt="manque_op" src="https://github.com/josselinbarry/geobs/assets/129364893/79f138f8-5e5b-4e9b-91d6-fe42af2f68ad">
 
 ### Données complémentaires
 
@@ -87,19 +100,25 @@ Mise en évidence (0/1) des ouvrages classés comme Ouvrages Prioritaires et qui
 
 Mise en évidence (0/1) des ouvrages situés en Liste 2 et qui ne dispose pas d'Avis Technique Global dans le BDOE (avis_technique_global).
 
+<img width="200" alt="manque_atg_l2" src="https://github.com/josselinbarry/geobs/assets/129364893/8da72ab3-682a-48cd-8890-9462096c181b">
+
 #### Besoin de mise en cohérence de l'Avis Technique Global, avec l'état et la hauteur de chute
 
 Mise en évidence (0/1) des ouvrages indiqués comme dérasés dans la BDOE (ouv_derasement) ou entièrement détruits dans le ROE (etat_nom), dont la hauteur de chute est nulle dans le ROE, la BDOE ou ICE, et dont l’Avis Technique Global est NULL dans la BDOE (avis_technique_global).
+
+<img width="200" alt="mec_hc_atg" src="https://github.com/josselinbarry/geobs/assets/129364893/40969641-aa24-4f99-bb55-a71c2250fa1d">
 
 #### Mise en évidence des "ouvrages dérasés soldés"
 
 Mise en évidence (0/1) des ouvrages indiqués comme dérasés dans la BDOE (ouv_derasement) ou entièrement détruits dans le ROE (etat_nom), dont la hauteur de chute est nulle dans le ROE, la BDOE ou ICE, et dont l’Avis Technique Global est positif dans la BDOE (avis_technique_global). Ils sont considérés comme « soldés » et ne sont donc pas priorisés.
 
+<img width="200" alt="derasement_solde" src="https://github.com/josselinbarry/geobs/assets/129364893/bbed97b8-e1d1-487e-9dfb-22d3b9947dea">
+
 ## Export de la couche BDROE interne
 
-L'outil permet d'exporter une couche de la "BDROE" interne au format géopackage.
+L'outil permet enfin d'exporter une couche de la "BDROE interne" au format géopackage.
 
-Cette couche est ensuite diffusée aux agents en charge du renseignement des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiée. 
+Cette couche est ensuite diffusée régionalement aux agents en charge de renseigner des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiés. 
 
 *## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (en cours de réalisation)
 
