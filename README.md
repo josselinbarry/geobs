@@ -42,11 +42,19 @@ Pour générer son analyse, l'outil nécessite de disposer des données de conte
 
 L'outil assure la jointure des bases entre elles puis filtre les ouvrages situés dans les régions Bretagne et Pays de la Loire.
 
-## Ajout d'information (L1, L2)
+## Complément d'informations
+
+### Classement en Liste 1 et Liste 2 au titre de l'article L214.17
 
 L'information qui indique le rattachement d'un ouvrage à un tronçon classé en Liste 1  ou en Liste 2 au titre de l'article L.214-17 est stockée dans la BDOE (classement_liste_1 et classement_liste_2). Nous ne disposons donc pas de l'information pour l'ensemble des ouvrages inscrits dans le ROE.
 
-L'outil permet de conserver l'information contenue dans le BDOE, quand elle existe, et à défaut renseigne l'information par intersection avec un tampon de 50m autour des listes respectives. Cette démarche peut inclure ou exclure des ouvrages par erreur.  
+L'outil permet de conserver l'information contenue dans le BDOE, quand elle existe, et à défaut renseigne l'information par intersection avec un tampon de 50m autour des listes respectives. Cette méthode peut conduire à inclure ou exclure des ouvrages par erreur.  
+
+### Classement en Zone Prioritaire d'Action pour l'anguille
+
+Cette information n'est pas indiquée dans les bases ROE et BDOE, elle peut cependant être utile afin de prioriser les ouvrages.
+
+L'outil assure une jointure spatiale avec la couche des ZAP et renseigne leur rattachement ou non à ces zones (zap_ang). 
 
 ## Calcul des indicateurs de complétude
 
@@ -114,6 +122,10 @@ Mise en évidence (0/1) des ouvrages indiqués comme dérasés dans la BDOE (ouv
 Mise en évidence (0/1) des ouvrages indiqués comme dérasés dans la BDOE (ouv_derasement) ou entièrement détruits dans le ROE (etat_nom), dont la hauteur de chute est nulle dans le ROE, la BDOE ou ICE, et dont l’Avis Technique Global est positif dans la BDOE (avis_technique_global). Ils sont considérés comme « soldés » et ne sont donc pas priorisés.
 
 <img width="200" alt="derasement_solde" src="https://github.com/josselinbarry/geobs/assets/129364893/bbed97b8-e1d1-487e-9dfb-22d3b9947dea">
+
+#### Mise en évidence des ouvrages situés en ZAP
+
+Mise en évidence (0/1) des ouvrages situés en Zone d'Action Prioritaire pour l'anguille (zap_ang).
 
 ## Export de la couche BDROE interne
 
