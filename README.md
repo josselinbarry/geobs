@@ -33,9 +33,10 @@ La BDOE est accesible depuis le site geobs : https://geobs.eaufrance.fr/geobs/ex
 #### Données de contexte
 
 Pour générer son analyse, l'outil nécessite de disposer des données de contexte suivantes : 
-- Couche géographique des tronçons classés en Liste 1 au titre de l'article L.214-17 
-- Couche géographique des tronçons classés en Liste 2 au titre de l'article L.214-17 
-- Table des ouvrages classés comme Ouvrages Prioritaires
+- Couche géographique des tronçons classés en Liste 1 au titre de l'article L.214-17,
+- Couche géographique des tronçons classés en Liste 2 au titre de l'article L.214-17, 
+- Table des ouvrages classés comme Ouvrages Prioritaires,
+- Couche géographique des Zones d'Action Prioritaires pour l'anguille européenne.
 
 ## Jointure et filtre des bases (ROE et BDOE, régions bretagne et pays de la loire)
 
