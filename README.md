@@ -127,6 +127,9 @@ Mise en évidence (0/1) des ouvrages indiqués comme dérasés dans la BDOE (ouv
 
 Mise en évidence (0/1) des ouvrages situés en Zone d'Action Prioritaire pour l'anguille (zap_ang).
 
+<img width="200" alt="zap_ang" src="https://github.com/josselinbarry/geobs/assets/129364893/abfc7d0b-9762-4394-bbe1-6a0149836aee">
+
+
 ## Export de la couche BDROE interne
 
 L'outil permet enfin d'exporter une couche de la "BDROE interne" au format géopackage.
