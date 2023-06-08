@@ -11,7 +11,7 @@ Les données considérées comme essentielles et sur lesquelles porte cette anal
 - *Franchissement piscicole (manque_fip)* : pas de franchissement piscicole renseigné (Absence de passe, Ascenseur à poisson, Autre type de passe, Ecluse à poisson, Exutoire de dévalaison, Passe à Anguille, Passe à bassins successifs, Passe à ralentisseurs, Pré-barrage, Rampe, Rivière de contournement ou Type de dispositif (piscicole) inconnu),
 - *Hauteur de chute (manque_hc)* : pas de hauteur de chute renseignée (Hauteur de chute ou classe de hauteur de chute non renseignée dans le ROE, la BDOE et ICE). 
 
-Afin de prioriser les renseignements à apporter, l'outil met en évidence les ouvrages pour lesquels au moins l'une de ces données est lacunaire lorsqu'ils sont considérés commme prioritaires (XXX) ou lorsqu'ils sont situés sur un tronçon classé en Liste 2 au titre de l'article L.214-17 :
+Afin de prioriser les renseignements à apporter, l'outil met en évidence les ouvrages pour lesquels au moins l'une de ces données est lacunaire lorsqu'ils sont considérés commme Ouvrages Prioritaires ou lorsqu'ils sont situés sur un tronçon classé en Liste 2 au titre de l'article L.214-17 :
 - *Manque sur Ouvrage prioritaire (manque_op)*,
 - *Manque sur ouvrage situé en Liste 2 (manque_l2)*, 
 - *Mise en évidence des "ouvrages dérasés soldés" (derasement_solde)*.
