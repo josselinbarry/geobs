@@ -20,6 +20,10 @@ Deux dernières analyses, plus secondaires, viennent compléter ces premiers él
 - Pas d'Avis Technique Global (ATG) pour un ouvrage situé sur un tronçon classé en Liste 2 au titre de l'article L.214-17 (manque_atg_l2),
 - Pas de cohérence entre la hauteur de chute (nulle), l'état (entièrement détruit ou dérasé) et l'ATG (non renseigné) (mec_hc_atg).
 
+L'outil propose ensuite deux exports de données sous forme de couche géographiques au format géopackage : 
+- Une couche dite *"BDROE interne"* issue de la jointure du ROE interne et de la BDOE, complétée des différents paramètres d'analyse,
+- Une couche des bassins versant des masses d'eau qui compile, sous forme de synthèse, l'ensemble des manques identifiés pour les ouvrages pour chacune des masses d'eau qui leur sont rattachées.
+
 ## Import des données 
 
 #### ROE
