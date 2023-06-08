@@ -40,7 +40,8 @@ Pour générer son analyse, l'outil nécessite de disposer des données de conte
 - Couche géographique des tronçons classés en Liste 1 au titre de l'article L.214-17,
 - Couche géographique des tronçons classés en Liste 2 au titre de l'article L.214-17, 
 - Table des ouvrages classés comme Ouvrages Prioritaires,
-- Couche géographique des Zones d'Action Prioritaires pour l'anguille européenne.
+- Couche géographique des Zones d'Action Prioritaires pour l'anguille européenne,
+- Couche géographique des Schémas d'Amménagement et de Gestion de l'Eau (SAGE).
 
 ## Jointure et filtre des bases (ROE et BDOE, régions bretagne et pays de la loire)
 
@@ -56,9 +57,15 @@ L'outil permet de conserver l'information contenue dans le BDOE, quand elle exis
 
 ### Classement en Zone Prioritaire d'Action pour l'anguille
 
-Cette information n'est pas indiquée dans les bases ROE et BDOE, elle peut cependant être utile afin de prioriser les ouvrages.
+Cette information n'est pas recensée dans les bases ROE et BDOE, elle peut cependant être utile afin de prioriser les ouvrages.
 
 L'outil assure une jointure spatiale avec la couche des ZAP et renseigne leur rattachement ou non à ces zones (zap_ang). 
+
+### Ajout de l'information du SAGE de rattachement
+
+Cette information n'est pas recensée dans les bases ROE et BDOE, elle peut cependant être utile afin de prioriser les ouvrages.
+
+L'outil assure une jointure spatiale avec la couche des SAGE et renseigne le nom du SAGE de rattachement (sage_nom). 
 
 ## Calcul des indicateurs de complétude
 
@@ -133,6 +140,9 @@ Mise en évidence (0/1) des ouvrages situés en Zone d'Action Prioritaire pour l
 
 <img width="200" alt="zap_ang" src="https://github.com/josselinbarry/geobs/assets/129364893/abfc7d0b-9762-4394-bbe1-6a0149836aee">
 
+#### Ajout du SAGE de rattachement de l'ouvrage;
+
+Ajout du nom du SAGE de rattachement de l'ouvrage (sage_nom).
 
 ## Export de la couche BDROE interne
 
