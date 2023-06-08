@@ -22,7 +22,7 @@ Deux dernières analyses, plus secondaires, viennent compléter ces premiers él
 
 L'outil propose enfin deux exports de données sous forme de couche géographiques au format géopackage : 
 - Une couche dite *"BDROE interne"* issue de la jointure du ROE interne et de la BDOE, complétée des différents paramètres d'analyse,
-- Une couche des bassins versant des masses d'eau qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées.
+- Une couche des bassins versant des masses d'eau qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées (EN COURS DE REALISATION).
 
 ## Import des données 
 
@@ -150,7 +150,7 @@ L'outil permet enfin d'exporter une couche de la "BDROE interne" au format géop
 
 Cette couche est ensuite diffusée régionalement aux agents en charge de renseigner des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiés. 
 
-## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (en cours de réalisation)
+## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (EN COURS DE REALISATION)
 
 ### Etat
 
@@ -176,9 +176,9 @@ Répartition des ouvrages selon leur Avis Technique Global renseigné.
 
 Répartition des ouvrages selon le système de franchissement piscicole renseigné.
 
-### *Chronologie de remplissage (nouvel ouvrage, modification, hauteurs de chute, ...)
+### Chronologie de remplissage (nouvel ouvrage, modification, hauteurs de chute, ...)
 
-*Dynamique de renseignement des champs dates. 
+Dynamique de renseignement des champs dates. 
 
 ## Améliorations envisagées (en cours de réalisation)
 
