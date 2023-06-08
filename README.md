@@ -182,10 +182,8 @@ Dynamique de renseignement des champs dates.
 
 ## Améliorations envisagées (en cours de réalisation)
 
+### Ecriture du script de production de la couche de synthèse des manques identifiés par bassin vesant de masse d'eau.
 ### Ecriture des scripts "Valorisation régionale des principales informations contenues dans les bases ROE et BDOE"
 
-### Jointure des données de contexte :
-#### ZAP
-#### SAGE
 
 Josselin BARRY, OFB, Juin 2023
