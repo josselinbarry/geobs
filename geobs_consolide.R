@@ -1,3 +1,6 @@
+## VERSION FINALISEE AU 20230607
+## En cours d'ajout sur la partie analytique
+
 # Library ----
 
 library(tidyverse)
