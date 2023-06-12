@@ -68,6 +68,14 @@ tampon_liste1 <-
 ouvrages_prioritaires <-
   data.table::fread(file = "data/20230601_Ouv_prioritaires BZH_PDL.csv")
 
+zap_anguille <-
+  sf::read_sf(dsn = "data/zap_anguille.gpkg")
+
+masse_eau <-
+  sf::read_sf(dsn = "data/BVSpeMasseDEauSurface_edl2019.shp")
+
+sage <-
+  sf::read_sf(dsn = "data/sage_2016_DIR2.shp")
 
 # Mise à jour Ouvrages prioritaires
 
@@ -138,11 +146,6 @@ bdroe_dr2 <- bdroe_dr2 %>%
     (!is.na(especes_cibles) & especes_cibles!= "") ~ especes_cibles,
     (is.na(especes_cibles) | especes_cibles == "") ~ Esp_arrete))  
 
-# sauvegarde ----
-save(bdroe_dr2,
-     file = "data/outputs/maj_roe.RData")
-
-
 ## Mise à jour Liste1 ----
 
 bdroe_dr2 <- bdroe_dr2 %>%
@@ -155,6 +158,39 @@ bdroe_dr2 <- bdroe_dr2 %>%
   group_by(identifiant_roe) %>% 
   distinct()
 
+## Ajout du champ ZAP anguille
+
+bdroe_dr2 <- bdroe_dr2 %>%
+  st_join(zap_anguille) %>% 
+  mutate(zap_ang = case_when(
+    !is.na(zap_ang) ~ '1',
+    is.na(zap_ang) ~ '0')) %>%
+  distinct()
+
+## Ajout du champ SAGE
+
+bdroe_dr2 <- bdroe_dr2 %>%
+  st_join(sage, 
+          largest = T) %>% 
+  distinct()
+
+
+# sauvegarde ----
+save(bdroe_dr2,
+     file = "data/outputs/maj_roe.RData")
+
+## examen des duplicats ---------
+identifiants_roe_dupliques <- bdroe_dr2 %>% 
+  sf::st_drop_geometry() %>% 
+  group_by(identifiant_roe) %>% 
+  tally() %>% 
+  filter(n > 1) %>% 
+  pull(identifiant_roe)
+
+maj_roe_avec_duplicats2 <- bdroe_dr2 %>% 
+  filter(identifiant_roe %in%  identifiants_roe_dupliques)
+
+## fin examen des duplicats
 
 #Filtres
 
@@ -333,36 +369,114 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
           ouv_hauteur_chute_5 == 0 | 
           hauteur_chute_ICE == 0) &
        avis_technique_global == 'Positif'), '1', '0')) %>%
-  mutate(derasement_solde = as.numeric(derasement_solde)) %>%
+  mutate(derasement_solde  = as.numeric(derasement_solde)) %>%
   mutate(derasement_solde = case_when(
     is.na(derasement_solde) ~ 0,
     !is.na(derasement_solde) ~ derasement_solde
   ))
 
+# Création d'une couche de synthèse des manque de complétude par bassin versant de masse d'eau
+# CA BUG DUR CE PUTAIN DE group_by !
+
+#essais
+bdroe_dr2_cd_me <- bdroe_dr2_maj %>%
+  st_join(masse_eau) %>% 
+  sf::st_drop_geometry() %>% 
+  filter(statut_nom != 'Gelé' & derasement_solde != '1' & !is.na(cdbvspemdo)) %>%
+  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides) %>%
+  as.data.frame()
+
+me_analyse_manques <- bdroe_dr2_cd_me %>%
+  group_by(cdbvspemdo, na.rm = T)%>%
+  summarise(cdbvspemdo,
+            ntot_manque_op = sum(manque_op),
+            ntot_manque_l2 = sum(manque_l2), 
+            ntot_manque_etat = sum(manque_etat), 
+            ntot_manque_type = sum(manque_type), 
+            ntot_manque_hc = sum(manque_hc), 
+            ntot_manque_fip = sum(manque_fip),
+            ntot_non_valide = sum(non_valides)) %>%
+  as.data.frame() 
+
+#good/bof : 
+
+me_analyse_manques <- bdroe_dr2_cd_me %>%
+  group_by(cdbvspemdo, na.rm = T) %>%
+  summarise(cdbvspemdo = count(cdbvspemdo)) %>%
+  mutate(cd_me = cdbvspemdo$x,
+         ntot_roe = cdbvspemdo$freq) 
+
+
+
+  summarise(manque_op = count(manque_op))
+  as.data.frame()
+ 
+rm(me_analyse_manques)
+ 
+            nb_total_manque_l2 = sum(manque_l2), 
+            nb_total_manque_etat = sum(manque_etat), 
+            nb_total_manque_type = sum(manque_type), 
+            nb_total_manque_hc = sum(manque_hc), 
+            nb_total_manque_fip = sum(manque_fip),
+            nb_total_non_valide = sum(non_valides))
+
+#essais
+roe_grp_type <- maj_roe %>%
+  group_by(type_nom, na.rm = T) %>%
+  summarise(type_nom = count(type_nom))
+
+
+  
+  select(cdbvspemdo, 
+         nb_total_manque_op, 
+         nb_total_manque_l2, 
+         nb_total_manque_etat, 
+         nb_total_manque_type, 
+         nb_total_manque_hc, 
+         nb_total_manque_fip, 
+         nb_total_non_valides)
+  
+
+me_stat_manque_bdroe <- masse_eau %>%
+  dplyr::left_join(bdroe_dr2_cd_me,
+                   by = c("cdbvspemdo" = "cdbvspemdo")) %>%
+  select(cdbvspemdo, 
+         nb_total_manque_op, 
+         nb_total_manque_l2, 
+         nb_total_manque_etat, 
+         nb_total_manque_type, 
+         nb_total_manque_hc, 
+         nb_total_manque_fip, 
+         nb_total_non_valide)
+
+# fin des essais sur group_by ... de merde ...
+
 # Sauvegarder la couche bdroe_dr2_maj
 
-sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/stat_BDROE_interne_BZH_PDL_20230402.gpkg")
+sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20230402.gpkg")
 
-# Calcul des variables par département BUG
+# Calcul des variables par département 
+# ca BUG - BUG group_by + summarise
 
-#bilan_non_valide <-non_valides %>%
-#group_by(dept_code) %>%
-#count()
+bdroe_stat_dept <- bdroe_dr2_maj %>%
+  sf::st_drop_geometry() %>% 
+  filter(statut_nom != 'Gelé' & derasement_solde != '1') %>%
+  select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
+  as.data.frame()
 
-analyse_stat_bdroe <- bdroe_dr2_maj %>% 
-
-    select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
+bdroe_stat_dept2 <- bdroe_stat_dept %>%
+  as.data.frame() %>%
   group_by(dept_nom) %>%
-  summarise(nb_total_manque_op = sum(manque_op, na.rm = T),
-            nb_total_manque_l2 = sum(manque_l2, na.rm = T), 
-            nb_total_manque_etat = sum(manque_etat, na.rm = T), 
-            nb_total_manque_type = sum(manque_type, na.rm = T), 
-            nb_total_manque_hc = sum(manque_hc, na.rm = T), 
-            nb_total_manque_fip = sum(manque_fip, na.rm = T),
-            nb_total_non_valide = sum(non_valides, na.rm = T), 
-            nb_total_manque_atg_l2 = sum(manque_atg_l2, na.rm = T),
-            nb_total_mec_atg_hc = sum(mec_atg_hc, na.rm = T),
-            nb_total_derasement_solde = sum(derasement_solde, na.rm = T))
+  summarise(ntot_manque_op = sum(manque_op, na.rm = T),
+            ntot_manque_l2 = sum(manque_l2, na.rm = T), 
+            ntot_manque_etat = sum(manque_etat, na.rm = T), 
+            ntot_manque_type = sum(manque_type, na.rm = T), 
+            ntot_manque_hc = sum(manque_hc, na.rm = T), 
+            ntot_manque_fip = sum(manque_fip, na.rm = T),
+            ntot_non_valide = sum(non_valides, na.rm = T), 
+            ntot_manque_atg_l2 = sum(manque_atg_l2, na.rm = T),
+            ntot_mec_atg_hc = sum(mec_atg_hc, na.rm = T),
+            ntot_derasement_solde = sum(derasement_solde, na.rm = T))
 
 
 # Valorisation régionale de la "BDROE"
