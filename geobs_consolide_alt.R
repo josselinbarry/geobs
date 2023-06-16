@@ -14,7 +14,7 @@ library(tidyverse)
 library(sf)
 #library(stringi)
 
-
+source(file = "R/functions.R")
 
 # Chargement données obstacles ----
 
