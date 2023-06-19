@@ -4,19 +4,34 @@
 # Library ----
 
 library(tidyverse)
-library(lubridate)
-library(RcppRoll)
-library(DT)
-library(readxl)
+#library(lubridate)
+#library(RcppRoll)
+#library(DT)
+#library(readxl)
 library(dbplyr)
-library(RPostgreSQL)
-library(rsdmx)
+#library(RPostgreSQL)
+#library(rsdmx)
 library(sf)
-library(stringi)
-library(plyr)
-
+#library(stringi)
+#library(plyr)
+devtools::install_github("PascalIrz/aspe")
+aspe::misc_nom_dernier_fichier
+  
 
 # Chargement données obstacles ----
+
+## Load data
+
+```{r}
+# retrieve most recent data file from repo 
+rdata_tables <- misc_nom_dernier_fichier(
+  repertoire = "../../../../projets/ASPE/raw_data/rdata",
+  pattern = "^tables")
+# load it
+load(rdata_tables)
+```
+
+Data file : `r str_replace(rdata_tables, "../../../../projets/ASPE/raw_data/rdata/", "")` 
 
 ## BDOE ----
 
@@ -386,11 +401,10 @@ bdroe_dr2_cd_me <- bdroe_dr2_maj %>%
   st_join(masse_eau) %>% 
   sf::st_drop_geometry() %>% 
   filter(statut_nom != 'Gelé' & derasement_solde != '1' & !is.na(cdbvspemdo)) %>%
-  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides) %>%
-  as.data.frame()
+  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides)
 
 me_analyse_manques <- bdroe_dr2_cd_me %>%
-  group_by(cdbvspemdo, na.rm = T)%>%
+  group_by(cdbvspemdo)%>%
   summarise(cdbvspemdo,
             ntot_manque_op = sum(manque_op),
             ntot_manque_l2 = sum(manque_l2), 
@@ -404,7 +418,7 @@ me_analyse_manques <- bdroe_dr2_cd_me %>%
 #good/bof : 
 
 me_analyse_manques <- bdroe_dr2_cd_me %>%
-  group_by(cdbvspemdo, na.rm = T) %>%
+  group_by(cdbvspemdo) %>%
   summarise(cdbvspemdo = count(cdbvspemdo)) %>%
   mutate(cd_me = cdbvspemdo$x,
          ntot_roe = cdbvspemdo$freq) 
