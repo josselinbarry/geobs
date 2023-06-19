@@ -1,55 +1,22 @@
-<<<<<<< HEAD
-## VERSION FINALISEE AU 20230612
-=======
 ## VERSION FINALISEE AU 20230607
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
 ## En cours d'ajout sur la partie analytique
 
 # Library ----
-
+#library(plyr)
 library(tidyverse)
-<<<<<<< HEAD
-#library(lubridate)
-#library(RcppRoll)
-#library(DT)
-#library(readxl)
-library(dbplyr)
-#library(RPostgreSQL)
-#library(rsdmx)
+# library(lubridate)
+# library(RcppRoll)
+# library(DT)
+# library(readxl)
+# library(dbplyr)
+# library(RPostgreSQL)
+# library(rsdmx)
 library(sf)
 #library(stringi)
-#library(plyr)
-devtools::install_github("PascalIrz/aspe")
-aspe::misc_nom_dernier_fichier
-  
-=======
-library(lubridate)
-library(RcppRoll)
-library(DT)
-library(readxl)
-library(dbplyr)
-library(RPostgreSQL)
-library(rsdmx)
-library(sf)
-library(stringi)
-library(plyr)
 
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
+source(file = "R/functions.R")
 
 # Chargement données obstacles ----
-
-## Load data
-
-```{r}
-# retrieve most recent data file from repo 
-rdata_tables <- misc_nom_dernier_fichier(
-  repertoire = "../../../../projets/ASPE/raw_data/rdata",
-  pattern = "^tables")
-# load it
-load(rdata_tables)
-```
-
-Data file : `r str_replace(rdata_tables, "../../../../projets/ASPE/raw_data/rdata/", "")` 
 
 ## BDOE ----
 
@@ -247,21 +214,21 @@ manque_type <-
 manque_etat <- 
   filter(bdroe_dr2, (is.na(etat_nom)|etat_nom == "")) %>% 
   mutate(manque_etat = 1) %>%
-  mutate(manque_etat = as.numeric(manque_etat)) %>%
+#  mutate(manque_etat = as.numeric(manque_etat)) %>%
   select(identifiant_roe, manque_etat) %>% 
   sf::st_drop_geometry()
 
 manque_hc <- 
   filter(bdroe_dr2, (((is.na(hauteur_chute_etiage) | hauteur_chute_etiage == ""| hauteur_chute_etiage < 0)) & 
-                     (is.na(hauteur_chute_etiage_classe) | hauteur_chute_etiage_classe == "Indéterminée" | hauteur_chute_etiage_classe == "") &
-                     (is.na(ouv_hauteur_chute_1) | ouv_hauteur_chute_1 =="") & 
-                     (is.na(ouv_hauteur_chute_2) | ouv_hauteur_chute_2 =="") &
-                     (is.na(ouv_hauteur_chute_3) | ouv_hauteur_chute_3 =="") &
-                     (is.na(ouv_hauteur_chute_4) | ouv_hauteur_chute_4 =="") &
-                     (is.na(ouv_hauteur_chute_5) | ouv_hauteur_chute_5 =="") &
-                     (is.na(hauteur_chute_ICE) | hauteur_chute_ICE ==''))) %>% 
+                       (is.na(hauteur_chute_etiage_classe) | hauteur_chute_etiage_classe == "Indéterminée" | hauteur_chute_etiage_classe == "") &
+                       (is.na(ouv_hauteur_chute_1) | ouv_hauteur_chute_1 =="") & 
+                       (is.na(ouv_hauteur_chute_2) | ouv_hauteur_chute_2 =="") &
+                       (is.na(ouv_hauteur_chute_3) | ouv_hauteur_chute_3 =="") &
+                       (is.na(ouv_hauteur_chute_4) | ouv_hauteur_chute_4 =="") &
+                       (is.na(ouv_hauteur_chute_5) | ouv_hauteur_chute_5 =="") &
+                       (is.na(hauteur_chute_ICE) | hauteur_chute_ICE ==''))) %>% 
   mutate(manque_hc = 1) %>% 
-  mutate(manque_hc = as.numeric(manque_hc)) %>%
+#  mutate(manque_hc = as.numeric(manque_hc)) %>%
   select(identifiant_roe, manque_hc) %>% 
   sf::st_drop_geometry()
 
@@ -305,65 +272,26 @@ mec_atg_hc <-
 
 # Rapatriement des données sur la bdroe
 
-bdroe_dr2_maj <- bdroe_dr2 %>% 
-  dplyr::left_join(non_valides, 
-                   by = c("identifiant_roe" = "identifiant_roe"))%>% 
-  mutate(bdroe_dr2_maj, non_valides = case_when(
-    non_valides == "1" ~ '1',
-    non_valides == "" ~ '0',
-    is.na(non_valides) ~ '0'))%>%
-  mutate(non_valides = as.numeric(non_valides)) %>%
-  dplyr::left_join(manque_etat, 
-                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_etat = case_when(
-    manque_etat == "1" ~ '1',
-    manque_etat == "" ~ '0',
-    is.na(manque_etat) ~ '0'))%>%
-  mutate(manque_etat = as.numeric(manque_etat)) %>%
-  dplyr::left_join(manque_type, 
-                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_type = case_when(
-    manque_type == "1" ~ '1',
-    manque_type == "" ~ '0',
-    is.na(manque_type) ~ '0'))%>%
-  mutate(manque_type = as.numeric(manque_type)) %>%
-  dplyr::left_join(manque_hc, 
-                   by = c("identifiant_roe" = "identifiant_roe"))%>% 
-  mutate(bdroe_dr2_maj, manque_hc = case_when(
-    manque_hc == "1" ~ '1',
-    manque_hc == "" ~ '0',
-    is.na(manque_hc) ~ '0'))%>%
-  mutate(manque_hc = as.numeric(manque_hc)) %>%
-  dplyr::left_join(manque_fip, 
-                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_fip = case_when(
-    manque_fip == "1" ~ '1',
-    manque_fip == "" ~ '0',
-    is.na(manque_fip) ~ '0'))%>%
-  mutate(manque_fip = as.numeric(manque_fip)) %>%
-  dplyr::left_join(manque_atg_l2, 
-                   by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_atg_l2 = case_when(
-    manque_atg_l2 == "1" ~ '1',
-    manque_atg_l2 == "" ~ '0',
-    is.na(manque_atg_l2) ~ '0'))%>%
-  mutate(manque_atg_l2 = as.numeric(manque_atg_l2)) %>%
-  dplyr::left_join(mec_atg_hc, 
-                   by = c("identifiant_roe" = "identifiant_roe")) %>%
-  mutate(bdroe_dr2_maj, mec_atg_hc = case_when(
-    mec_atg_hc == "1" ~ '1',
-    mec_atg_hc == "" ~ '0',
-    is.na(mec_atg_hc) ~ '0')) %>%
-  mutate(mec_atg_hc = as.numeric(mec_atg_hc)) %>%
-  mutate(mec_atg_hc = case_when(
-    is.na(mec_atg_hc) ~ 0,
-    !is.na(mec_atg_hc) ~ mec_atg_hc
-  ))
-
+bdroe_dr2_maj3 <- bdroe_dr2 %>% 
+  dplyr::left_join(non_valides) %>% 
+  dplyr::left_join(manque_etat) %>% 
+  dplyr::left_join(manque_type) %>% 
+  dplyr::left_join(manque_hc) %>% 
+  dplyr::left_join(manque_fip) %>% 
+  dplyr::left_join(manque_atg_l2) %>% 
+  dplyr::left_join(mec_atg_hc) %>% 
+  mutate(non_valides = recoder_manquantes_en_zero(non_valides),
+         manque_etat = recoder_manquantes_en_zero(manque_etat),
+         manque_type = recoder_manquantes_en_zero(manque_type),
+         manque_hc = recoder_manquantes_en_zero(manque_hc),
+         manque_fip = recoder_manquantes_en_zero(manque_fip),
+         manque_atg_l2 = recoder_manquantes_en_zero(manque_atg_l2),
+         mec_atg_hc = recoder_manquantes_en_zero(mec_atg_hc))
 
 # Mise à jour manque_l2
 
-bdroe_dr2_maj <- bdroe_dr2_maj %>% 
+# bdroe_dr2_maj <- bdroe_dr2_maj %>% 
+bdroe_dr2_maj <- bdroe_dr2_maj3 %>% 
   mutate(manque_l2 = ifelse(
     (classement_liste_2 == "Oui" & 
        (manque_etat == "1" | 
@@ -419,70 +347,55 @@ bdroe_dr2_cd_me <- bdroe_dr2_maj %>%
   st_join(masse_eau) %>% 
   sf::st_drop_geometry() %>% 
   filter(statut_nom != 'Gelé' & derasement_solde != '1' & !is.na(cdbvspemdo)) %>%
-<<<<<<< HEAD
-  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides)
+  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides) 
 
 me_analyse_manques <- bdroe_dr2_cd_me %>%
-  group_by(cdbvspemdo)%>%
-=======
-  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides) %>%
-  as.data.frame()
+  group_by (cdbvspemdo) %>%
+  summarise(
+    ntot_manque_op = sum(manque_op, na.rm = T),
+    ntot_manque_l2 = sum(manque_l2, na.rm = T),
+    ntot_manque_etat = sum(manque_etat, na.rm = T),
+    ntot_manque_type = sum(manque_type, na.rm = T),
+    ntot_manque_hc = sum(manque_hc, na.rm = T),
+    ntot_manque_fip = sum(manque_fip, na.rm = T),
+    ntot_non_valide = sum(non_valides, na.rm = T),
+  )
 
-me_analyse_manques <- bdroe_dr2_cd_me %>%
-  group_by(cdbvspemdo, na.rm = T)%>%
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
-  summarise(cdbvspemdo,
-            ntot_manque_op = sum(manque_op),
-            ntot_manque_l2 = sum(manque_l2), 
-            ntot_manque_etat = sum(manque_etat), 
-            ntot_manque_type = sum(manque_type), 
-            ntot_manque_hc = sum(manque_hc), 
-            ntot_manque_fip = sum(manque_fip),
-            ntot_non_valide = sum(non_valides)) %>%
-  as.data.frame() 
-
-#good/bof : 
-
-me_analyse_manques <- bdroe_dr2_cd_me %>%
-<<<<<<< HEAD
-  group_by(cdbvspemdo) %>%
-=======
-  group_by(cdbvspemdo, na.rm = T) %>%
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
-  summarise(cdbvspemdo = count(cdbvspemdo)) %>%
-  mutate(cd_me = cdbvspemdo$x,
-         ntot_roe = cdbvspemdo$freq) 
-
-
-
-  summarise(manque_op = count(manque_op))
-  as.data.frame()
- 
-rm(me_analyse_manques)
- 
-            nb_total_manque_l2 = sum(manque_l2), 
-            nb_total_manque_etat = sum(manque_etat), 
-            nb_total_manque_type = sum(manque_type), 
-            nb_total_manque_hc = sum(manque_hc), 
-            nb_total_manque_fip = sum(manque_fip),
-            nb_total_non_valide = sum(non_valides))
+#good/bof :
+# me_analyse_manques <- bdroe_dr2_cd_me %>%
+#   group_by(cdbvspemdo) %>%
+#   summarise(cdbvspemdo = count(cdbvspemdo)) %>%
+#   mutate(cd_me = cdbvspemdo$x,
+#          ntot_roe = cdbvspemdo$freq) 
+# 
+# 
+# 
+# summarise(manque_op = count(manque_op))
+# as.data.frame()
+# 
+# rm(me_analyse_manques)
+# 
+# nb_total_manque_l2 = sum(manque_l2), 
+# nb_total_manque_etat = sum(manque_etat), 
+# nb_total_manque_type = sum(manque_type), 
+# nb_total_manque_hc = sum(manque_hc), 
+# nb_total_manque_fip = sum(manque_fip),
+# nb_total_non_valide = sum(non_valides))
 
 #essais
 roe_grp_type <- maj_roe %>%
-  group_by(type_nom, na.rm = T) %>%
-  summarise(type_nom = count(type_nom))
+  count(type_nom)
 
 
-  
-  select(cdbvspemdo, 
-         nb_total_manque_op, 
-         nb_total_manque_l2, 
-         nb_total_manque_etat, 
-         nb_total_manque_type, 
-         nb_total_manque_hc, 
-         nb_total_manque_fip, 
-         nb_total_non_valides)
-  
+# select(cdbvspemdo, 
+#        nb_total_manque_op, 
+#        nb_total_manque_l2, 
+#        nb_total_manque_etat, 
+#        nb_total_manque_type, 
+#        nb_total_manque_hc, 
+#        nb_total_manque_fip, 
+#        nb_total_non_valides)
+
 
 me_stat_manque_bdroe <- masse_eau %>%
   dplyr::left_join(bdroe_dr2_cd_me,
@@ -505,13 +418,10 @@ sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_2023
 # Calcul des variables par département 
 # ca BUG - BUG group_by + summarise
 
-bdroe_stat_dept <- bdroe_dr2_maj %>%
+dept_analyse_manques <- bdroe_dr2_maj %>%
   sf::st_drop_geometry() %>% 
   filter(statut_nom != 'Gelé' & derasement_solde != '1') %>%
-  select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
-  as.data.frame()
-
-bdroe_stat_dept2 <- bdroe_stat_dept %>%
+  select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc) %>%
   as.data.frame() %>%
   group_by(dept_nom) %>%
   summarise(ntot_manque_op = sum(manque_op, na.rm = T),
@@ -522,16 +432,19 @@ bdroe_stat_dept2 <- bdroe_stat_dept %>%
             ntot_manque_fip = sum(manque_fip, na.rm = T),
             ntot_non_valide = sum(non_valides, na.rm = T), 
             ntot_manque_atg_l2 = sum(manque_atg_l2, na.rm = T),
-            ntot_mec_atg_hc = sum(mec_atg_hc, na.rm = T),
-            ntot_derasement_solde = sum(derasement_solde, na.rm = T))
+            ntot_mec_atg_hc = sum(mec_atg_hc, na.rm = T)
+            )
 
 
 # Valorisation régionale de la "BDROE"
 
 ## Etat
 
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = etat_nom)) +
+bdroe_dr2_maj %>% 
+  mutate(etat_nom = ifelse((etat_nom == "" | is.na(etat_nom)),
+                           "Indéterminé",
+                           etat_nom)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(etat_nom)))) +
   geom_bar(fill = "blue") +
   coord_flip() +
   labs(x = "Statut de l'ouvrage",
@@ -539,9 +452,11 @@ ggplot(data = bdroe_dr2_maj,
        title = "Etat")
 
 ## Type
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = type_nom)) +
+bdroe_dr2_maj %>% 
+  mutate(type_nom = ifelse(type_nom == "",
+                           "Indéterminé",
+                           type_nom)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(type_nom)))) +
   geom_bar(fill = "blue") +
   coord_flip() +
   labs(x = "Type d'ouvrage",
@@ -549,9 +464,17 @@ ggplot(data = bdroe_dr2_maj,
        title = "Type d'ouvrage")
 
 ## Hauteur de chute
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(y = hauteur_chute_etiage_classe)) +
+bdroe_dr2_maj %>% 
+  mutate(hauteur_chute_etiage_classe = ifelse(hauteur_chute_etiage_classe == "",
+                                              "Indéterminée",
+                                              hauteur_chute_etiage_classe),
+         hauteur_chute_etiage_classe = as.factor(hauteur_chute_etiage_classe),
+         hauteur_chute_etiage_classe = fct_relevel(hauteur_chute_etiage_classe,
+                                                  "Indéterminée",
+                                                  "Inférieure à 0.5m",
+                                                  "De 0.5m à inférieure à 1m",
+                                                  "De 1m à inférieure à 1.5m")) %>% 
+  ggplot(aes(y = hauteur_chute_etiage_classe)) +
   geom_bar(fill = "blue") +
   labs(y = "Hauteur de chute",
        x = "Nombre d'ouvrages",
@@ -559,8 +482,11 @@ ggplot(data = bdroe_dr2_maj,
 
 ## FPI
 
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = fpi_nom1)) +
+bdroe_dr2_maj %>% 
+  mutate(fpi_nom1 = ifelse(fpi_nom1 == "",
+                           "Indéterminé",
+                           fpi_nom1)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(fpi_nom1)))) +
   geom_bar(fill = "blue") +
   coord_flip() +
   labs(x = "Type de franchissement piscicole",
@@ -569,8 +495,11 @@ ggplot(data = bdroe_dr2_maj,
 
 ## ATG
 
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = avis_technique_global)) +
+bdroe_dr2_maj %>% 
+  mutate(avis_technique_global = ifelse((avis_technique_global == "" | is.na(avis_technique_global)),
+                           "Indéterminé",
+                           avis_technique_global)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(avis_technique_global)))) +
   geom_bar(fill = "blue") +
   coord_flip() +
   labs(x = "ATG",
@@ -579,19 +508,59 @@ ggplot(data = bdroe_dr2_maj,
 
 ## Usages
 
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = usage_nom1)) +
+bdroe_dr2_maj %>% 
+  mutate(usage_nom1 = ifelse(usage_nom1 == "",
+                           "Indéterminé",
+                           usage_nom1)) %>%
+  ggplot(aes(x = fct_rev(fct_infreq(usage_nom1)))) +
   geom_bar(fill = "blue") +
   coord_flip() +
   labs(x = "Type d'usage",
        y = "Nombre d'ouvrages",
        title = "Type d'usage")
 
-## Dynamique de renseignement
+## Dynamique de création d'ouvrage
+
+#BUG -> 2030 ... pas de seconde est-ce lié au format HMS ?
 
 ggplot(data = bdroe_dr2_maj, 
-       aes(x = mutate(date_modification = as.date(date_modification)))) +
+       aes(x = lubridate::ymd_hms(date_creation))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'ouvrages",
+       title = "Dynamique de renseignement : date de création")
+
+## Dynamique de modification d'ouvrage
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = lubridate::ymd_hms(date_modification_ouvrage))) +
   geom_histogram(fill = "blue") +
   labs(x = "Date de l'observation",
        y = "Nombre d'ouvrages",
        title = "Dynamique de renseignement : date de modification")   
+
+## Dynamique de validation d'ouvrage
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = lubridate::ymd_hms(date_validation_ouvrage))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'ouvrages",
+       title = "Dynamique de renseignement : date de validation")   
+
+## Dynamique hauteur de chute d'ouvrage
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = lubridate::ymd(ouv_date_hauteur_chute_1))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'ouvrages",
+       title = "Dynamique de renseignement : hauteur de chute 1")   
+
+ggplot(data = bdroe_dr2_maj, 
+       aes(x = lubridate::ymd(ouv_date_hauteur_chute_2))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'ouvrages",
+       title = "Dynamique de renseignement : hauteur de chute 2")   
+
