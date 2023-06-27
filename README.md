@@ -1,20 +1,28 @@
-# R_GEOBS : analyse et mise en évidence des manques de complétude des bases ROE et BDOE 
+![image](https://github.com/josselinbarry/geobs/assets/129364893/c02002f2-f721-41a0-adfd-240818b5cd54)# R_GEOBS : analyse et mise en évidence des manques de complétude des bases ROE et BDOE 
 
 Outil destiné aux agents de l'OFB pour cibler les données essentielles lacunaires dans les bases ROE et BDOE.
 
 Ces manques de complétude sont des freins à la valorisation de ces bases de données (calculs des indicateurs d'étagement et de fractionnement dans le cadre du rapportage sur la continuité notamment). L'outil propose donc de mettre en évidence ces manques d'information, par ordre de priorité, pour faciliter leur intégration progressive par les agents.
 
+Certains ouvrages sont écartés préalablement de l'analyses car considérés comme non prioritaires :
+- Les ouvrages dont l'état est "Gelé",
+- Les ouvrages cumulant :
+  - Un état "Entièrement détruit" (ou "dérasé" dans la BDOE),
+  - Une hauteur de chute nulle,
+  - Un Avis Technique Global (ATG) positif.
+Ces derniers sont considérés comme « dérasement soldé » et sont donc écartés de l'analyse.
+
 Les données considérées comme essentielles et sur lesquelles porte cette analyse sont les suivantes : 
-- *Statut (non_valides)* : ouvrage en attente de validation,
-- *Etat (manque_etat)* : pas d'état renseigné (Existant, En projet, En construction, Détruit entièrement ou Détruit partiellement),
-- *Type (manque_type)* : pas de type renseigné (Barrage, Digue, Epis en rivière, Grille de pisciculture, Obstacle induit par un pont ou Seuil en rivière),
-- *Franchissement piscicole (manque_fip)* : pas de franchissement piscicole renseigné (Absence de passe, Ascenseur à poisson, Autre type de passe, Ecluse à poisson, Exutoire de dévalaison, Passe à Anguille, Passe à bassins successifs, Passe à ralentisseurs, Pré-barrage, Rampe, Rivière de contournement ou Type de dispositif (piscicole) inconnu),
-- *Hauteur de chute (manque_hc)* : pas de hauteur de chute renseignée (Hauteur de chute ou classe de hauteur de chute non renseignée dans le ROE, la BDOE et ICE). 
+- **Statut (non_valides)** : ouvrage en attente de validation,
+- **Etat (manque_etat)** : pas d'état renseigné (Existant, En projet, En construction, Détruit entièrement ou Détruit partiellement),
+- **Type (manque_type)** : pas de type renseigné (Barrage, Digue, Epis en rivière, Grille de pisciculture, Obstacle induit par un pont ou Seuil en rivière),
+- **Franchissement piscicole (manque_fip)** : pas de franchissement piscicole renseigné (Absence de passe, Ascenseur à poisson, Autre type de passe, Ecluse à poisson, Exutoire de dévalaison, Passe à Anguille, Passe à bassins successifs, Passe à ralentisseurs, Pré-barrage, Rampe, Rivière de contournement ou Type de dispositif (piscicole) inconnu),
+- **Hauteur de chute (manque_hc)** : pas de hauteur de chute renseignée (Hauteur de chute ou classe de hauteur de chute non renseignée dans le ROE, la BDOE et ICE). 
 
 Afin de prioriser les renseignements à apporter, l'outil met en évidence les ouvrages pour lesquels au moins l'une de ces données est lacunaire lorsqu'ils sont considérés commme Ouvrages Prioritaires ou lorsqu'ils sont situés sur un tronçon classé en Liste 2 au titre de l'article L.214-17 :
-- *Manque sur Ouvrage prioritaire (manque_op)*,
-- *Manque sur ouvrage situé en Liste 2 (manque_l2)*, 
-- *Mise en évidence des "ouvrages dérasés soldés" (derasement_solde)*.
+- **Manque sur Ouvrage prioritaire (manque_op)**,
+- **Manque sur ouvrage situé en Liste 2 (manque_l2)**, 
+- **Mise en évidence des "ouvrages dérasés soldés" (derasement_solde)**.
 
 Deux dernières analyses, plus secondaires, viennent compléter ces premiers éléments : 
 - Pas d'Avis Technique Global (ATG) pour un ouvrage situé sur un tronçon classé en Liste 2 au titre de l'article L.214-17 (manque_atg_l2),
