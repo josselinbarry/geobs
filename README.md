@@ -30,8 +30,8 @@ Deux dernières analyses, plus secondaires, viennent compléter ces premiers él
 L'outil propose enfin trois exports de données :
 - Deux couche géographiques (au format géopackage) : 
   - Une couche dite **"BDROE interne"** issue de la jointure du ROE interne et de la BDOE, complétée des différents paramètres d'analyse,
-  - Une couche des **bassins versant des masses d'eau** qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées.
-- Une table qui compile, sous forme de synthèse départementale, l'ensemble des manques identifiés (au format .xlsx).
+  - Une couche des bassins versant des masses d'eau qui compile, sous forme de **synthèse par masse d'eau**, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées.
+- Une table qui compile, sous forme de **synthèse départementale**, l'ensemble des manques identifiés (au format .xlsx).
 
 ## Import des données 
 
