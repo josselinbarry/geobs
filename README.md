@@ -1,4 +1,4 @@
-![image](https://github.com/josselinbarry/geobs/assets/129364893/c02002f2-f721-41a0-adfd-240818b5cd54)# R_GEOBS : analyse et mise en évidence des manques de complétude des bases ROE et BDOE 
+# R_GEOBS : analyse et mise en évidence des manques de complétude des bases ROE et BDOE 
 
 Outil destiné aux agents de l'OFB pour cibler les données essentielles lacunaires dans les bases ROE et BDOE.
 
@@ -6,11 +6,10 @@ Ces manques de complétude sont des freins à la valorisation de ces bases de do
 
 Certains ouvrages sont écartés préalablement de l'analyses car considérés comme non prioritaires :
 - Les ouvrages dont l'état est "Gelé",
-- Les ouvrages cumulant :
+- Les ouvrages considérés comme « dérasement soldé » cumulant :
   - Un état "Entièrement détruit" (ou "dérasé" dans la BDOE),
   - Une hauteur de chute nulle,
   - Un Avis Technique Global (ATG) positif.
-Ces derniers sont considérés comme « dérasement soldé » et sont donc écartés de l'analyse.
 
 Les données considérées comme essentielles et sur lesquelles porte cette analyse sont les suivantes : 
 - **Statut (non_valides)** : ouvrage en attente de validation,
@@ -25,12 +24,14 @@ Afin de prioriser les renseignements à apporter, l'outil met en évidence les o
 - **Mise en évidence des "ouvrages dérasés soldés" (derasement_solde)**.
 
 Deux dernières analyses, plus secondaires, viennent compléter ces premiers éléments : 
-- Pas d'Avis Technique Global (ATG) pour un ouvrage situé sur un tronçon classé en Liste 2 au titre de l'article L.214-17 (manque_atg_l2),
-- Pas de cohérence entre la hauteur de chute (nulle), l'état (entièrement détruit ou dérasé) et l'ATG (non renseigné) (mec_hc_atg).
+- *Pas d'Avis Technique Global (ATG) pour un ouvrage situé sur un tronçon classé en Liste 2* au titre de l'article L.214-17 (manque_atg_l2),
+- *Pas de cohérence entre la hauteur de chute (nulle), l'état (entièrement détruit ou dérasé) et l'ATG (non renseigné)* (mec_hc_atg).
 
-L'outil propose enfin deux exports de données sous forme de couche géographiques au format géopackage : 
-- Une couche dite *"BDROE interne"* issue de la jointure du ROE interne et de la BDOE, complétée des différents paramètres d'analyse,
-- Une couche des bassins versant des masses d'eau qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées (EN COURS DE REALISATION).
+L'outil propose enfin trois exports de données :
+- Deux couche géographiques (au format géopackage) : 
+  - Une couche dite **"BDROE interne"** issue de la jointure du ROE interne et de la BDOE, complétée des différents paramètres d'analyse,
+  - Une couche des **bassins versant des masses d'eau** qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées.
+- Une table qui compile, sous forme de synthèse départementale, l'ensemble des manques identifiés (au format .xlsx).
 
 ## Import des données 
 
