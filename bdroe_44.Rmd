@@ -1,0 +1,452 @@
+---
+title: "Mise en qualité du Référentiel des Obstacles à l’Ecoulement (ROE) <br>et de la Base de Donnée sur les Obstacles à l’Ecoulement (BDOE)"
+subtitle: "Ciblage des manques de complétude essentiels et consultation des données pour le département de la Loire-Atlantique (44)"
+author: "Josselin BARRY"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+always_allow_html: true
+output:
+  html_document:
+    toc: true 
+    toc_depth: 4 
+    toc_float: true 
+    number_sections: true  
+    theme: cerulean 
+    highlight: tango 
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r,}
+library(tidyverse)
+library(sf)
+library(units)
+library(mapview)
+library(dplyr)
+library(kableExtra)
+library(png)
+library(rstatix)
+library(ggpubr)
+library(UpSetR)
+library(ComplexUpset)
+library(vioplot) 
+library(plotly)
+
+load(file = "data/outputs/bdroe.RData")
+load(file = "data/outputs/bdroe_valid_pdl.RData")
+```
+# La "BDROE", une compilation des données sur les Obstacles à l'Ecoulement (BDOE - ROE) :
+
+## Création de la couche BDROE :
+
+**ROE** : Référentiel des Obstacles à l'Ecoulement, extraction des données **internes** réalisée le 1er décembre 2024.
+
+**BDOE** : Base de Donnée sur les Obstacles à l'Ecoulement, export des données **internes** réalisée le 6 janvier 2025.
+
+Une série de traitements permet par jointure des bases, d'obtenir une couche "complète" des informations dont nous disposons sur les obstacles à l'écoulement : 
+
+* Ajout, par appariement spatial, des valeurs manquantes pour les champs **dept_code** et **dept_nom** ;
+
+* Ajout, par appariement spatial, des valeurs manquantes pour le champ **masse_eau_code** ;
+
+* Ajout, par jointure spatiale, du champ **SAGE** et renseignement de ses valeurs ; 
+
+* Ajout, par jointure spatiale (tampon 50m), des valeurs manquantes pour les champs **liste1**, **liste2** et **especes_cibles** de la liste  ;
+
+* Jointure attributaires des informations de la BDOE et du ROE, avec suppression des doublons ;
+
+* Création et renseignement des différents champs d'identification des manques de complétude attributaires de la base :
+
+  * **non-valide** : ouvrages dont le "Statut" est ‘non-validé’ dans le ROE (généralement crée par un partenaire)
+
+  * **manque_etat** : ouvrages ne disposant pas de l’information "Etat" (Existant, En projet, En construction, Détruit entièrement ou Détruit partiellement), dans le ROE.
+
+  * **manque_type** : ouvrages ne disposant pas de l’information "Type" (Barrage, Digue, Epis en rivière, Grille de pisciculture, Obstacle induit par un pont ou Seuil en rivière), dans le ROE.
+
+  * **manque_hc** : ouvrages ne disposant pas de l’information "Hauteur de chute", ni dans le ROE (classe ou valeur), ni dans la BDOE (valeur), ni dans ICE (valeur).
+**Privilégier le remplissage de la BDOE qui permet d’indiquer une date et un opérateur**.
+
+  * **manque_fip** : ouvrages ne disposant pas de l’information "Dispositif de franchissement piscicole" dans le ROE, ni dans BDOE. Un ouvrage dépourvu de dispositif doit explicitement comporter l'information '_Absence de passe_' pour être considéré comme complet.
+
+  * **manque_op** : l’un des manques ciblés (statut, état, type, hauteur de chute ou dispositif de franchissement piscicole, hors ATG) concerne un ouvrage dit "Prioritaire". Le caractère prioritaire d’un ouvrage est issu de la liste des ouvrages du PLAGEPOMI 2018-2023, codé "PLAGEPOMI" dans le champ "démarche_priorisation_4" de la BDOE.
+
+  * **manque_l2** : l’un des manques ciblés (statut, état, type, hauteur de chute ou dispositif de franchissement piscicole, hors ATG) concerne un ouvrage situé en Liste 2 du L214-17.
+
+  * **ATG_l2** : ouvrage situé en Liste 2 ne disposant pas de l’information "Avis technique Global", dans la BDOE.
+
+  * **mec_hc_atg** : ouvrages  indiqués comme dérasés ou entièrement détruits, dont la hauteur de chute est nulle mais ne disposant pas de l’information "ATG" dans la BDOE.
+
+  * Création et renseignement du champ **derasement_solde** pour écarter du traitement les ouvrages ayant fait l'objet d'un dérasement avéré : ouvrages dont l’état est entièrement détruit (ou dérasé dans la BDOE) **ET** dont la hauteur de chute est nulle **ET** dont l’Avis Technique Global (ATG) est positif (ils sont considérés comme "soldés" et ne sont donc pas priorisés).
+
+## Principaux chiffres : 
+
+A l'échelle de l'inter-région : 
+
+* Le **ROE** (et donc la BDROE) compte `r nrow(bdroe) %>% format(scientific=FALSE, big.mark=" ")` ouvrages, dont `r nrow(bdroe %>% filter(statut_nom == "Gelé" | derasement_solde == 1)) %>% format(scientific=FALSE, big.mark=" ")` sont _gelés_ ou ont été _dérasés_
+
+* La **BDOE** compte `r nrow(bdroe %>% filter(sans_fiche_bdoe == 0)) %>% format(scientific=FALSE, big.mark=" ")` ouvrages (`r round(nrow(bdroe %>% filter(sans_fiche_bdoe == 1))*100/nrow(bdroe))`% des ouvrages ne disposent donc pas de fiche BDOE)
+
+* **Pour les ouvrages "non-soldés"** (`r nrow(bdroe %>% filter(statut_nom != "Gelé" & derasement_solde == 0))` ouvrages) : 
+
+  * `r nrow(nb_non_valides) %>% format(scientific=FALSE, big.mark=" ")` ouvrages sont **non-validés** (`r round(nrow(nb_non_valides)*100/nrow(bdroe))`% des ouvrages)
+  
+  * `r nrow(nb_manque_etat) %>% format(scientific=FALSE, big.mark=" ")` ouvrages ne disposent **pas d'état** (`r round(nrow(nb_manque_etat)*100/nrow(bdroe))`% des ouvrages)
+  
+  * `r nrow(nb_manque_type) %>% format(scientific=FALSE, big.mark=" ")` ouvrages ne disposent **pas de type** (`r round(nrow(nb_manque_type)*100/nrow(bdroe))`% des ouvrages)
+  
+  * `r nrow(nb_manque_hc) %>% format(scientific=FALSE, big.mark=" ")` ouvrages ne disposent **pas de hauteur de chute** (`r round(nrow(nb_manque_hc)*100/nrow(bdroe))`% des ouvrages)
+  
+  * `r nrow(nb_manque_fip) %>% format(scientific=FALSE, big.mark=" ")` ouvrages ne disposent **pas d'indication sur un dispositif de franchissement piscicole** (`r round(nrow(nb_manque_fip)*100/nrow(bdroe))`% des ouvrages)
+  
+  * `r nrow(nb_manque_op) %>% format(scientific=FALSE, big.mark=" ")` **ouvrages prioritaires** manquent d'une de ces informations essentielles (`r round(nrow(nb_manque_op)*100/nrow(nb_ouvrages_prioritaires))`% des ouvrages prioritaires)
+  
+  * `r nrow(nb_manque_l2) %>% format(scientific=FALSE, big.mark=" ")` **ouvrages situés en liste 2** manquent d'une de ces informations essentielles (`r round(nrow(nb_manque_l2)*100/nrow(nb_ouvrages_l2))`% des ouvrages situés en liste 2)
+  
+  * `r nrow(nb_atg_l2) %>% format(scientific=FALSE, big.mark=" ")` **ouvrages situés en liste 2** ne disposent pas d'**Avis Technique Global (ATG)** dans la BDOE (`r round(nrow(nb_atg_l2)*100/nrow(nb_ouvrages_l2))`% des ouvrages situés en liste 2)
+
+  * `r nrow(nb_mec_atg_hc) %>% format(scientific=FALSE, big.mark=" ")` ouvrages présentent un **manque de complétude entre les valeurs d'état** (détruit entièrement ou dérasé) **de hauteur de chute** (nulle) **et d'ATG** (non renseigné) (`r round(nrow(nb_mec_atg_hc)*100/nrow(bdroe))`% des ouvrages)
+
+# Synthèse des manques de complétude par territoire :
+
+## Régions Bretagne et Pays de la Loire
+
+```{r,}
+synthese_interregionale
+```
+
+## Région Pays de la Loire
+
+### Synthèse chiffrée
+
+```{r,}
+synthese_regionale_pdl
+```
+
+### Cartes régionales
+
+#### Manque de complétude sur ouvrages prioritaires (`r nrow(nb_manque_op %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_OP.PNG'))
+```
+
+
+#### Manque de complétude sur ouvrages en Liste 2 (L214.17) (`r nrow(nb_manque_l2 %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_L2.PNG'))
+```
+
+
+#### Ouvrages non validés (`r nrow(nb_non_valides %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_NON_VALIDE.PNG'))
+```
+
+
+#### Ouvrages sans 'Etat' (`r nrow(nb_manque_etat %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_ETAT.PNG'))
+```
+
+
+#### Ouvrages sans 'Type' (`r nrow(nb_manque_type %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_TYPE.PNG'))
+```
+
+
+#### Ouvrages sans 'Hauteur de chute' (`r nrow(nb_manque_hc %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_HC.PNG'))
+```
+
+
+#### Ouvrages sans 'Dispositif de franchissement piscicole' (`r nrow(nb_manque_fip %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_completude_FIP.PNG'))
+```
+
+
+#### Ouvrages situés en Liste2 (L214.17) sans 'ATG' (`r nrow(nb_manque_atg_l2 %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_atg_L2.PNG'))
+```
+
+
+#### Ouvrages en manque de cohérence entre l'état, la hauteur de chute et l'ATG (`r nrow(nb_mec_atg_hc %>% filter(dept_code %in% c('44', '49', '53', '72', '85'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_coherence_etat_hc_atg.PNG'))
+```
+
+#### Synthèse des manques de complétude par masse d'eau
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/PAYS_DE_LA_LOIRE_manque_me.PNG'))
+```
+
+## Département de la Loire-Atlantique
+
+### Manque de complétude sur ouvrages prioritaires (`r nrow(nb_manque_op %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_OP.PNG'))
+```
+
+
+### Manque de complétude sur ouvrages en Liste 2 (L214.17) (`r nrow(nb_manque_l2 %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_L2.PNG'))
+```
+
+
+### Ouvrages non validés (`r nrow(nb_non_valides %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_NON_VALIDE.PNG'))
+```
+
+
+### Ouvrages sans 'Etat' (`r nrow(nb_manque_etat %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_ETAT.PNG'))
+```
+
+
+### Ouvrages sans 'Type' (`r nrow(nb_manque_type %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_TYPE.PNG'))
+```
+
+
+### Ouvrages sans 'Hauteur de chute' (`r nrow(nb_manque_hc %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_HC.PNG'))
+```
+
+
+### Ouvrages sans 'Dispositif de franchissement piscicole' (`r nrow(nb_manque_fip %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_completude_FIP.PNG'))
+```
+
+
+### Ouvrages situés en Liste2 (L214.17) sans 'ATG' (`r nrow(nb_manque_atg_l2 %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_atg_L2.PNG'))
+```
+
+
+### Ouvrages en manque de cohérence entre l'état, la hauteur de chute et l'ATG (`r nrow(nb_mec_atg_hc %>% filter(dept_code %in% c('44'))) %>% format(scientific=FALSE, big.mark=" ")` ouvrages)
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_coherence_etat_hc_atg.PNG'))
+```
+
+### Synthèse des manques de complétude par masse d'eau
+
+```{r,}
+afficher_carte<-function(...){
+  imageList<-list(...) ;   totalWidth<-0 ;   maxHeight<-0 ;   
+  for (img in imageList){    if(is.character(img)) img<-readPNG(img) ;  dimg<-dim(img) ;  totalWidth<-totalWidth+dimg[2] ;   maxHeight<-max(maxHeight,dimg[1])  }
+  par(mar=c(0,0,0,0)) ;   plot(c(0,totalWidth),c(0,maxHeight),type="n",asp=1,xaxt="n",yaxt="n",xlab="x",ylab="y") ;   offset<-0 ; 
+  for (img in imageList){    dimg<-dim(img) ;    rasterImage(img,offset,0,offset+dimg[2],dimg[1])
+  offset<-offset+dimg[2]  }}
+
+afficher_carte(readPNG('data/cartes/LOIRE_ATLANTIQUE_manque_me.PNG'))
+```
+
+
+# Visualisation des données connues
+
+La série de diagramme suivante est dynamique, il est donc possible de cocher/décocher le(s) département(s) de votre choix dans la représentation graphique.
+
+## L'état des ouvrages 
+
+```{r,}
+histo_roe_etat_pdl
+```
+
+## Le type d'ouvrages 
+
+```{r,}
+histo_roe_type_pdl
+```
+
+## Le type de franchissement piscicole des ouvrages 
+
+```{r,}
+histo_roe_fpi_pdl
+```
+
+## La hauteur de chute des ouvrages 
+
+```{r,}
+histo_roe_hc_pdl
+```
+
+## L'Avis Technique Global (ATG) de franchissabilité des ouvrages 
+
+```{r,}
+histo_roe_etat_pdl
+```
+
+## L'usage des ouvrages 
+
+```{r,}
+histo_roe_usage_pdl
+```
+
+## La dynamique de renseignement des ouvrages dans Geobs 
+
+```{r,}
+ggplotly(histo_roe_date_pdl)
+```

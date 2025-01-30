@@ -1,14 +1,11 @@
-<<<<<<< HEAD
-## VERSION FINALISEE AU 20230612
-=======
-## VERSION FINALISEE AU 20230607
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
+
+## VERSION FINALISEE AU 202501
+
 ## En cours d'ajout sur la partie analytique
 
 # Library ----
 
 library(tidyverse)
-<<<<<<< HEAD
 #library(lubridate)
 #library(RcppRoll)
 #library(DT)
@@ -22,7 +19,6 @@ library(sf)
 devtools::install_github("PascalIrz/aspe")
 aspe::misc_nom_dernier_fichier
   
-=======
 library(lubridate)
 library(RcppRoll)
 library(DT)
@@ -34,49 +30,100 @@ library(sf)
 library(stringi)
 library(plyr)
 
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
 
 # Chargement données obstacles ----
 
-## Load data
-
-```{r}
-# retrieve most recent data file from repo 
-rdata_tables <- misc_nom_dernier_fichier(
-  repertoire = "../../../../projets/ASPE/raw_data/rdata",
-  pattern = "^tables")
-# load it
-load(rdata_tables)
-```
-
-Data file : `r str_replace(rdata_tables, "../../../../projets/ASPE/raw_data/rdata/", "")` 
-
 ## BDOE ----
 
-bdoe <- data.table::fread(file = "data/export_de_base_20230417.csv")
+bdoe <- data.table::fread(file = "data/export_de_base_20250106.csv",
+                          encoding = "UTF-8")
 
+sans_fiche_bdoe_bzh <- data.table::fread(file = "data/bdoe/bzh_export_de_base_sansFiches_20250106.csv",
+                                     encoding = "Latin-1")
+
+sans_fiche_bdoe_pdl <- data.table::fread(file = "data/bdoe/pdl_export_de_base_sansFiches_20250106.csv",
+                                         encoding = "Latin-1")
+
+sans_fiche_bdoe_sn <- data.table::fread(file = "data/bdoe/sn_export_de_base_sansFiches_20250107.csv",
+                                         encoding = "Latin-1")
+
+roe_sans_fiche_bdoe <- dplyr::bind_rows(sans_fiche_bdoe_bzh, sans_fiche_bdoe_pdl, sans_fiche_bdoe_sn) %>%
+  mutate(sans_fiche_bdoe = 1)
 
 ## ROE par bassin ----
 
-roe_lb <- data.table::fread(file = "data/lb_temp20230402.csv",
+roe_lb <- data.table::fread(file = "data/lb_temp20241201.csv",
                             encoding = "Latin-1",
                             colClasses = c("date_creation" = "character"))
 
-roe_sn <- data.table::fread(file = "data/sn_temp20230402.csv",
+roe_sn <- data.table::fread(file = "data/sn_temp20241201.csv",
                             encoding = "Latin-1",
                             colClasses = c("date_creation" = "character"))
 
+roe_nr <- data.table::fread(file = "data/nr_temp20241201.csv",
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
 
 ## Fusionner les ROE par bassin ---- 
 
-roe_lb_sn <- dplyr::bind_rows(roe_lb, roe_sn)
-
+roe_lb_sn_nr <- dplyr::bind_rows(roe_lb, roe_sn, roe_nr)
 
 ## Basculer le ROE en sf_geom ----
 
-roe_geom <- roe_lb_sn %>% 
+roe_geom <- roe_lb_sn_nr %>% 
+  filter(!is.na(x_l93)) %>%
   st_as_sf(coords = c("x_l93", "y_l93"), remove = FALSE, crs = 2154) 
 
+## Attribuer les dept_code non renseignés ----
+
+dprt <- 
+  sf::read_sf(dsn = "data/DEPARTEMENT.shp")
+
+cd_dprt_manquant_roe <- roe_geom %>%
+  select(identifiant_roe, dept_code, x_l93, y_l93) %>%
+  filter((dept_code == '' | is.na(dept_code))) %>%
+  filter (x_l93 > 85000 & x_l93 < 560000 & y_l93 > 6570000 & y_l93 < 6900000 )
+
+plus_proche_dprt <- sf::st_nearest_feature(x = cd_dprt_manquant_roe,
+                                             y = dprt)
+
+dist_dprt <- st_distance(cd_dprt_manquant_roe, dprt[plus_proche_dprt,], by_element = TRUE)
+
+view(plus_proche_dprt)
+
+cd_dprt_roe <- cd_dprt_manquant_roe %>% 
+  cbind(dist_dprt) %>% 
+  cbind(dprt[plus_proche_dprt,]) %>% 
+  select(identifiant_roe,
+         dprt_le_plus_proche = INSEE_DEP,
+         distance_dprt = dist_dprt) %>% 
+  sf::st_drop_geometry() %>% 
+  mutate(distance_dprt_km = round(distance_dprt/1000,3))
+
+## Mise à jour du dprt_code de la couche roe_geom
+
+roe_geom_cd <- roe_geom  %>%
+  left_join(cd_dprt_roe, by = c("identifiant_roe" = "identifiant_roe")) %>%  
+  mutate(dept_code = ifelse(
+    (dept_code == '' | is.na(dept_code)),
+    dprt_le_plus_proche,
+    dept_code)) %>%
+  distinct() 
+
+roe_geom <- roe_geom_cd %>%
+  select(-dprt_le_plus_proche, -distance_dprt, -distance_dprt_km)
+
+## Mise à jour des noms de département ----
+
+roe_geom_nom <- roe_geom  %>%
+  left_join(dprt %>%
+              st_drop_geometry(), 
+            by = c("dept_code" = "INSEE_DEP")) %>%  
+  mutate(dept_nom == nom_dept) %>%
+  distinct() 
+
+roe_geom <- roe_geom_nom %>%
+  select(-nom_dept)
 
 ## Jointure ROE et BDOE et sélection des obstacles BZH et PDL----
 
@@ -84,8 +131,6 @@ bdroe_dr2 <- roe_geom %>%
   dplyr::left_join(bdoe, 
                    by = c("identifiant_roe" = "cdobstecou")) %>%
   dplyr::filter(dept_code %in% c('22', '29', '35', '56', '44', '49', '53', '72', '85'))
-
-
 
 # Import des données de contexte ----
 
@@ -113,7 +158,47 @@ masse_eau <-
 sage <-
   sf::read_sf(dsn = "data/sage_2016_DIR2.shp")
 
-# Mise à jour Ouvrages prioritaires
+bv_me <- 
+  sf::read_sf(dsn = "data/bassins_versants_me_zone_etude.gpkg") %>%
+  st_transform(crs = 2154)
+
+# Mise à jour du code masse d'eau ----
+
+cd_me_manquant_roe <- bdroe_dr2 %>%
+  select(identifiant_roe, masse_eau_code) %>%
+  filter((masse_eau_code == '' | is.na(masse_eau_code))) 
+
+plus_proche_me <- sf::st_nearest_feature(x = cd_me_manquant_roe,
+                                         y = bv_me)
+
+dist_me <- st_distance(cd_me_manquant_roe, bv_me[plus_proche_me,], by_element = TRUE)
+
+view(plus_proche_me)
+
+cd_me_roe <- cd_me_manquant_roe %>% 
+  cbind(dist_me) %>% 
+  cbind(bv_me[plus_proche_me,]) %>% 
+  select(identifiant_roe,
+         me_le_plus_proche = cdeumassed,
+         distance_me = dist_me) %>% 
+  sf::st_drop_geometry() %>% 
+  mutate(distance_me_km = round(distance_me/1000,3))
+
+## Mise à jour du me_code de la couche roe_geom
+
+roe_geom_cd_me <- bdroe_dr2  %>%
+  left_join(cd_me_roe, by = c("identifiant_roe" = "identifiant_roe")) %>%  
+  mutate(masse_eau_code = ifelse(
+    (masse_eau_code == '' | is.na(masse_eau_code)),
+    me_le_plus_proche,
+    masse_eau_code)) %>%
+  distinct() 
+
+bdroe_dr2 <- roe_geom_cd_me %>%
+  select(-me_le_plus_proche, -distance_me, -distance_me_km)
+
+# Mise à jour Ouvrages prioritaires ----
+# Obsolète 
 
 bdroe_dr2 <- bdroe_dr2 %>% 
   dplyr::left_join(ouvrages_prioritaires, 
@@ -152,8 +237,7 @@ maj_roe <- bdroe_dr2 %>%
     avis_technique_global,
     classement_liste_1,
     classement_liste_2,
-    especes_cibles,
-    ouvrage_prio)
+    especes_cibles)
 
 
 ## Recherche des informations liste 2  -------
@@ -182,6 +266,9 @@ bdroe_dr2 <- bdroe_dr2 %>%
     (!is.na(especes_cibles) & especes_cibles!= "") ~ especes_cibles,
     (is.na(especes_cibles) | especes_cibles == "") ~ Esp_arrete))  
 
+bdroe_dr2 <- bdroe_dr2 %>%
+  select(-Esp_arrete)
+
 ## Mise à jour Liste1 ----
 
 bdroe_dr2 <- bdroe_dr2 %>%
@@ -194,7 +281,7 @@ bdroe_dr2 <- bdroe_dr2 %>%
   group_by(identifiant_roe) %>% 
   distinct()
 
-## Ajout du champ ZAP anguille
+## Ajout du champ ZAP anguille ----
 
 bdroe_dr2 <- bdroe_dr2 %>%
   st_join(zap_anguille) %>% 
@@ -203,32 +290,80 @@ bdroe_dr2 <- bdroe_dr2 %>%
     is.na(zap_ang) ~ '0')) %>%
   distinct()
 
-## Ajout du champ SAGE
+## Ajout du champ SAGE ----
 
 bdroe_dr2 <- bdroe_dr2 %>%
   st_join(sage, 
           largest = T) %>% 
   distinct()
 
+## Distinction des ouvrages sans fiche BDOE ----
+
+bdroe_dr2 <- bdroe_dr2 %>%
+  left_join(y = roe_sans_fiche_bdoe, join_by("identifiant_roe" == "cdobstecou")) %>% 
+  mutate(sans_fiche_bdoe = ifelse(
+    is.na(sans_fiche_bdoe), 
+    '0', sans_fiche_bdoe))
 
 # sauvegarde ----
+
 save(bdroe_dr2,
      file = "data/outputs/maj_roe.RData")
 
-## examen des duplicats ---------
-identifiants_roe_dupliques <- bdroe_dr2 %>% 
+load(file = "data/outputs/maj_roe.RData")
+
+write.csv(roe_sans_fiche_bdoe, file = "data/outputs/sans_fiche_bdoe_20250106.csv")
+
+bdroe_test <- roe_lb_sn_nr %>%
+  filter("identifiant_roe" == 'ROE127262')
+
+# MAJ OP vraie mais attendre demarche priorisation PDL = PLAGEPOMI ----
+
+#ouvrages_prioritaires <- 
+  filter(bdroe_dr2, demarche_priorisation_4 == 'PLAGEPOMI') %>% 
+  mutate(ouvrage_prioritaire = 1) %>% 
+  mutate(ouvrage_prioritaire = as.numeric(ouvrage_prioritaire)) %>%
+  select(identifiant_roe, ouvrage_prioritaire) %>% 
+  sf::st_drop_geometry()
+
+# Mise à jour OP dans l'attente des PDL ----
+
+bdroe_dr2 <- bdroe_dr2 %>% 
+  left_join(ouvrages_prioritaires %>%
+              select(-nom_principal, -nom_secondaire)) %>%
+  mutate(ouvrage_prioritaire = ifelse(
+    ((ouvrage_prio == "oui" & 
+      dept_code %in% c('44','49','53','72','85')) |
+      (demarche_priorisation_4 == 'PLAGEPOMI' & 
+         dept_code %in% c('22','29','35','56'))), 
+    '1', '0')) %>%
+  mutate(ouvrage_prioritaire = ifelse(
+    is.na(ouvrage_prioritaire), 
+    '0', ouvrage_prioritaire)) %>%
+  mutate(ouvrage_prioritaire = as.numeric(ouvrage_prioritaire)) %>%
+  select(-ouvrage_prio)
+
+## examen des duplicats ----
+
+identifiants_roe_dupliques <- bdroe_dr2_maj %>% 
   sf::st_drop_geometry() %>% 
   group_by(identifiant_roe) %>% 
   tally() %>% 
   filter(n > 1) %>% 
   pull(identifiant_roe)
 
-maj_roe_avec_duplicats2 <- bdroe_dr2 %>% 
+# Correction "manuelle" duplicatats ----
+
+bdroe_dr2 <- bdroe_dr2 %>%
+  filter(coalesce(hauteur_chute_ICE,1000) != '59')
+
+maj_roe_avec_duplicats2 <- bdroe_dr2_2 %>% 
   filter(identifiant_roe %in%  identifiants_roe_dupliques)
 
 ## fin examen des duplicats
 
-#Filtres
+
+# Filtres ----
 
 non_valides <- 
   filter(bdroe_dr2, (is.na(statut_nom) | statut_nom == "Non validé" | statut_nom == "")) %>% 
@@ -265,14 +400,14 @@ manque_hc <-
   select(identifiant_roe, manque_hc) %>% 
   sf::st_drop_geometry()
 
-manque_fip <-
-  filter(bdroe_dr2, ((is.na(fpi_nom1) | fpi_nom1 == "")) &
+manque_fip <- bdroe_dr2 %>%
+  filter((is.na(fpi_nom1) | fpi_nom1 == "") &
            (is.na(fpi_nom2) | fpi_nom2 == "") &
            (is.na(fpi_nom3) | fpi_nom3 == "") &
            (is.na(fpi_nom4) | fpi_nom4 == "") &
-           (is.na(fpi_nom5) | fpi_nom5 == "") &
-           (is.na(mesure_corrective_devalaison_equipement) | mesure_corrective_devalaison_equipement == "") & 
-           (is.na(mesure_corrective_montaison_equipement)) | mesure_corrective_montaison_equipement == "") %>% 
+           (is.na(fpi_nom5) | fpi_nom5 == "") & 
+  (is.na(mesure_corrective_devalaison_equipement) | mesure_corrective_devalaison_equipement == "" | mesure_corrective_devalaison_equipement == "Non") & 
+  (is.na(mesure_corrective_montaison_equipement) | mesure_corrective_montaison_equipement == ""  | mesure_corrective_montaison_equipement == "Non"))  %>% 
   mutate(manque_fip = 1) %>% 
   mutate(manque_fip = as.numeric(manque_fip)) %>%
   select(identifiant_roe, manque_fip) %>% 
@@ -302,55 +437,54 @@ mec_atg_hc <-
   distinct() %>%
   sf::st_drop_geometry()
 
-
-# Rapatriement des données sur la bdroe
+# Rapatriement des données sur la bdroe ----
 
 bdroe_dr2_maj <- bdroe_dr2 %>% 
   dplyr::left_join(non_valides, 
                    by = c("identifiant_roe" = "identifiant_roe"))%>% 
-  mutate(bdroe_dr2_maj, non_valides = case_when(
+  mutate(non_valides = case_when(
     non_valides == "1" ~ '1',
     non_valides == "" ~ '0',
     is.na(non_valides) ~ '0'))%>%
   mutate(non_valides = as.numeric(non_valides)) %>%
   dplyr::left_join(manque_etat, 
                    by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_etat = case_when(
+  mutate(manque_etat = case_when(
     manque_etat == "1" ~ '1',
     manque_etat == "" ~ '0',
     is.na(manque_etat) ~ '0'))%>%
   mutate(manque_etat = as.numeric(manque_etat)) %>%
   dplyr::left_join(manque_type, 
                    by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_type = case_when(
+  mutate(manque_type = case_when(
     manque_type == "1" ~ '1',
     manque_type == "" ~ '0',
     is.na(manque_type) ~ '0'))%>%
   mutate(manque_type = as.numeric(manque_type)) %>%
   dplyr::left_join(manque_hc, 
                    by = c("identifiant_roe" = "identifiant_roe"))%>% 
-  mutate(bdroe_dr2_maj, manque_hc = case_when(
+  mutate(manque_hc = case_when(
     manque_hc == "1" ~ '1',
     manque_hc == "" ~ '0',
     is.na(manque_hc) ~ '0'))%>%
   mutate(manque_hc = as.numeric(manque_hc)) %>%
   dplyr::left_join(manque_fip, 
                    by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_fip = case_when(
+  mutate(manque_fip = case_when(
     manque_fip == "1" ~ '1',
     manque_fip == "" ~ '0',
     is.na(manque_fip) ~ '0'))%>%
   mutate(manque_fip = as.numeric(manque_fip)) %>%
   dplyr::left_join(manque_atg_l2, 
                    by = c("identifiant_roe" = "identifiant_roe")) %>% 
-  mutate(bdroe_dr2_maj, manque_atg_l2 = case_when(
+  mutate(manque_atg_l2 = case_when(
     manque_atg_l2 == "1" ~ '1',
     manque_atg_l2 == "" ~ '0',
     is.na(manque_atg_l2) ~ '0'))%>%
   mutate(manque_atg_l2 = as.numeric(manque_atg_l2)) %>%
   dplyr::left_join(mec_atg_hc, 
                    by = c("identifiant_roe" = "identifiant_roe")) %>%
-  mutate(bdroe_dr2_maj, mec_atg_hc = case_when(
+  mutate(mec_atg_hc = case_when(
     mec_atg_hc == "1" ~ '1',
     mec_atg_hc == "" ~ '0',
     is.na(mec_atg_hc) ~ '0')) %>%
@@ -359,7 +493,6 @@ bdroe_dr2_maj <- bdroe_dr2 %>%
     is.na(mec_atg_hc) ~ 0,
     !is.na(mec_atg_hc) ~ mec_atg_hc
   ))
-
 
 # Mise à jour manque_l2
 
@@ -378,12 +511,14 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
     !is.na(manque_l2) ~ manque_l2
   ))
 
+att_manque_l2 <- bdroe_dr2_maj %>%
+  filter(manque_l2 == 1)
 
-# Mise à jour manque_op
+# Mise à jour manque_op 
 
 bdroe_dr2_maj <- bdroe_dr2_maj %>% 
   mutate(manque_op = ifelse(
-    (ouvrage_prio == "Oui" & 
+    (ouvrage_prioritaire == "1" & 
        (manque_etat == "1" | 
           manque_type == "1" | 
           manque_hc == "1" | 
@@ -391,6 +526,9 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
           manque_fip == "1")), 
     '1', '0')) %>%
   mutate(manque_op = as.numeric(manque_op)) 
+
+att_manque_op <- bdroe_dr2_maj %>%
+  filter(manque_op == 1)
 
 # Mise en évidence dérasement soldés
 
@@ -411,187 +549,176 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
     !is.na(derasement_solde) ~ derasement_solde
   ))
 
-# Création d'une couche de synthèse des manque de complétude par bassin versant de masse d'eau
-# CA BUG DUR CE PUTAIN DE group_by !
+# Nettoyage des champs inutiles ----
 
-#essais
-bdroe_dr2_cd_me <- bdroe_dr2_maj %>%
-  st_join(masse_eau) %>% 
-  sf::st_drop_geometry() %>% 
-  filter(statut_nom != 'Gelé' & derasement_solde != '1' & !is.na(cdbvspemdo)) %>%
-<<<<<<< HEAD
-  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides)
+bdroe_dr2_maj <- bdroe_dr2_maj %>%
+  select(-statut_code, 
+         -etat_code, 
+         -type_code, 
+         -stype_code, 
+         -x_rraf91, 
+         -y_rraf91, 
+         -x_rgfg95, 
+         -y_rgfg95, 
+         -x_rgm04, 
+         -y_rgm04, 
+         -x_rgr92, 
+         -y_rgr92, 
+         -position_wgs84, 
+         -XCartL93, 
+         -YCartL93, 
+         -XTopoL93, 
+         -YTopoL93, 
+         -XCartrgfg95, 
+         -YCartrgfg95, 
+         -XToporgfg95, 
+         -YToporgfg95, 
+         -XCartrgm04, 
+         -YCartrgm04, 
+         -XToporgm04, 
+         -YToporgm04, 
+         -XCartrgr92, 
+         -YCartrgr92, 
+         -XToporgr92, 
+         -YToporgr92, 
+         -XCartrraf91, 
+         -YCartrraf91, 
+         -XToporraf91, 
+         -YToporraf91, 
+         -CodeProjSandre, 
+         -fpi_code1,
+         -fpi_code2,
+         -fpi_code3,
+         -fpi_code4,
+         -fpi_code5,
+         -emo_code1,
+         -emo_code2,
+         -emo_code3,
+         -fnt_code1,
+         -fnt_code2,
+         -fnt_code3,
+         -fnt_nom3,
+         -usage_code1,
+         -usage_code2,
+         -usage_code3,
+         -usage_code4,
+         -ouvrage_fils4, 
+         -ouvrage_fils5, 
+         -ouvrage_fils6, 
+         -ouvrage_fils7,
+         -ouvrage_fils8, 
+         -altitude.x,
+         -pk_carthage,
+         -position_bd_topo,
+         -position_bd_carthage,
+         -nomprincip,
+         -ouv_coord_x,
+         -ouv_coord_y,
+         -ouv_type_nom,
+         -ouv_usages,
+         -ouv_etat,
+         -ouv_liaison,
+         -ouv_ouvrage_lie, 
+         -commune, 
+         -departement,
+         -statut_roe)
 
-me_analyse_manques <- bdroe_dr2_cd_me %>%
-  group_by(cdbvspemdo)%>%
-=======
-  select(identifiant_roe, cdbvspemdo, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides) %>%
-  as.data.frame()
+# Calculs variables de Rmarkdown ----
 
-me_analyse_manques <- bdroe_dr2_cd_me %>%
-  group_by(cdbvspemdo, na.rm = T)%>%
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
-  summarise(cdbvspemdo,
-            ntot_manque_op = sum(manque_op),
-            ntot_manque_l2 = sum(manque_l2), 
-            ntot_manque_etat = sum(manque_etat), 
-            ntot_manque_type = sum(manque_type), 
-            ntot_manque_hc = sum(manque_hc), 
-            ntot_manque_fip = sum(manque_fip),
-            ntot_non_valide = sum(non_valides)) %>%
-  as.data.frame() 
+bdroe_dr2_maj <- bdroe
 
-#good/bof : 
+bdroe_dr2_valid <- bdroe_dr2_maj %>%
+  filter(statut_nom != "Gelé" & derasement_solde == 0)
 
-me_analyse_manques <- bdroe_dr2_cd_me %>%
-<<<<<<< HEAD
-  group_by(cdbvspemdo) %>%
-=======
-  group_by(cdbvspemdo, na.rm = T) %>%
->>>>>>> c76f5471a5436169c012e3cc3d5a8ab8ad2ffd7f
-  summarise(cdbvspemdo = count(cdbvspemdo)) %>%
-  mutate(cd_me = cdbvspemdo$x,
-         ntot_roe = cdbvspemdo$freq) 
+nb_non_valides <- 
+  filter(bdroe_dr2_valid %>%
+           filter((is.na(statut_nom) | statut_nom == "Non validé" | statut_nom == ""))) %>%
+  select(identifiant_roe, dept_code, non_valides) %>% 
+  sf::st_drop_geometry()
 
+nb_manque_type <- 
+  filter(bdroe_dr2_valid, (is.na(type_nom)|type_nom == "")) %>% 
+  select(identifiant_roe, dept_code, manque_type) %>% 
+  sf::st_drop_geometry()
 
+nb_manque_etat <- 
+  filter(bdroe_dr2_valid, (is.na(etat_nom)|etat_nom == "")) %>% 
+  select(identifiant_roe, dept_code, manque_etat) %>% 
+  sf::st_drop_geometry()
 
-  summarise(manque_op = count(manque_op))
-  as.data.frame()
- 
-rm(me_analyse_manques)
- 
-            nb_total_manque_l2 = sum(manque_l2), 
-            nb_total_manque_etat = sum(manque_etat), 
-            nb_total_manque_type = sum(manque_type), 
-            nb_total_manque_hc = sum(manque_hc), 
-            nb_total_manque_fip = sum(manque_fip),
-            nb_total_non_valide = sum(non_valides))
+nb_manque_hc <- 
+  filter(bdroe_dr2_valid, (((is.na(hauteur_chute_etiage) | hauteur_chute_etiage == ""| hauteur_chute_etiage < 0)) & 
+                       (is.na(hauteur_chute_etiage_classe) | hauteur_chute_etiage_classe == "Indéterminée" | hauteur_chute_etiage_classe == "") &
+                       (is.na(ouv_hauteur_chute_1) | ouv_hauteur_chute_1 =="") & 
+                       (is.na(ouv_hauteur_chute_2) | ouv_hauteur_chute_2 =="") &
+                       (is.na(ouv_hauteur_chute_3) | ouv_hauteur_chute_3 =="") &
+                       (is.na(ouv_hauteur_chute_4) | ouv_hauteur_chute_4 =="") &
+                       (is.na(ouv_hauteur_chute_5) | ouv_hauteur_chute_5 =="") &
+                       (is.na(hauteur_chute_ICE) | hauteur_chute_ICE ==''))) %>% 
+  select(identifiant_roe, dept_code, manque_hc) %>% 
+  sf::st_drop_geometry()
 
-#essais
-roe_grp_type <- maj_roe %>%
-  group_by(type_nom, na.rm = T) %>%
-  summarise(type_nom = count(type_nom))
+nb_manque_fip <- bdroe_dr2_valid %>%
+  filter((is.na(fpi_nom1) | fpi_nom1 == "") &
+           (is.na(fpi_nom2) | fpi_nom2 == "") &
+           (is.na(fpi_nom3) | fpi_nom3 == "") &
+           (is.na(fpi_nom4) | fpi_nom4 == "") &
+           (is.na(fpi_nom5) | fpi_nom5 == "") & 
+           (is.na(mesure_corrective_devalaison_equipement) | mesure_corrective_devalaison_equipement == "" | mesure_corrective_devalaison_equipement == "Non") & 
+           (is.na(mesure_corrective_montaison_equipement) | mesure_corrective_montaison_equipement == ""  | mesure_corrective_montaison_equipement == "Non"))  %>% 
+  select(identifiant_roe, dept_code, manque_fip) %>% 
+  sf::st_drop_geometry()
 
+nb_manque_atg_l2 <-
+  filter(bdroe_dr2_valid, ((is.na(avis_technique_global)|avis_technique_global=="") & classement_liste_2 == "Oui" )) %>% 
+  select(identifiant_roe, dept_code, manque_atg_l2) %>% 
+  sf::st_drop_geometry()
 
-  
-  select(cdbvspemdo, 
-         nb_total_manque_op, 
-         nb_total_manque_l2, 
-         nb_total_manque_etat, 
-         nb_total_manque_type, 
-         nb_total_manque_hc, 
-         nb_total_manque_fip, 
-         nb_total_non_valides)
-  
+nb_mec_atg_hc <- bdroe_dr2_valid %>%
+  filter((etat_nom == "Détruit entièrement" | ouv_derasement == "TRUE") & 
+           (hauteur_chute_etiage == 0 |
+           ouv_hauteur_chute_1 == 0 | 
+           ouv_hauteur_chute_2 == 0 | 
+           ouv_hauteur_chute_3 == 0 | 
+           ouv_hauteur_chute_4 == 0 |  
+           ouv_hauteur_chute_5 == 0 | 
+           hauteur_chute_ICE == 0) &
+      (avis_technique_global == "" |is.na(avis_technique_global))) %>%
+  select(identifiant_roe, dept_code, mec_atg_hc) %>% 
+  distinct() %>%
+  sf::st_drop_geometry()
 
-me_stat_manque_bdroe <- masse_eau %>%
-  dplyr::left_join(bdroe_dr2_cd_me,
-                   by = c("cdbvspemdo" = "cdbvspemdo")) %>%
-  select(cdbvspemdo, 
-         nb_total_manque_op, 
-         nb_total_manque_l2, 
-         nb_total_manque_etat, 
-         nb_total_manque_type, 
-         nb_total_manque_hc, 
-         nb_total_manque_fip, 
-         nb_total_non_valide)
+nb_manque_op <- bdroe_dr2_valid %>%
+  filter(manque_op ==1)
 
-# fin des essais sur group_by ... de merde ...
+nb_manque_l2 <- bdroe_dr2_valid %>%
+  filter(manque_l2 ==1)
 
-# Sauvegarder la couche bdroe_dr2_maj
+nb_ouvrages_prioritaires <- bdroe_dr2_valid %>%
+  filter(ouvrage_prioritaire == 1)
 
-sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20230402.gpkg")
+nb_ouvrages_l2 <- bdroe_dr2_valid %>%
+  filter(classement_liste_2 == 'Oui')
 
-# Calcul des variables par département 
-# ca BUG - BUG group_by + summarise
+nb_atg_l2 <- bdroe_dr2_valid %>%
+  filter((is.na(avis_technique_global) | avis_technique_global == '') & classement_liste_2 == 'Oui')
 
-bdroe_stat_dept <- bdroe_dr2_maj %>%
-  sf::st_drop_geometry() %>% 
-  filter(statut_nom != 'Gelé' & derasement_solde != '1') %>%
-  select(dept_nom, manque_op, manque_l2, manque_etat, manque_type, manque_hc, manque_fip, non_valides, manque_atg_l2, mec_atg_hc, derasement_solde) %>%
-  as.data.frame()
+# Sauvegarder la couche bdroe_dr2_maj ----
 
-bdroe_stat_dept2 <- bdroe_stat_dept %>%
-  as.data.frame() %>%
-  group_by(dept_nom) %>%
-  summarise(ntot_manque_op = sum(manque_op, na.rm = T),
-            ntot_manque_l2 = sum(manque_l2, na.rm = T), 
-            ntot_manque_etat = sum(manque_etat, na.rm = T), 
-            ntot_manque_type = sum(manque_type, na.rm = T), 
-            ntot_manque_hc = sum(manque_hc, na.rm = T), 
-            ntot_manque_fip = sum(manque_fip, na.rm = T),
-            ntot_non_valide = sum(non_valides, na.rm = T), 
-            ntot_manque_atg_l2 = sum(manque_atg_l2, na.rm = T),
-            ntot_mec_atg_hc = sum(mec_atg_hc, na.rm = T),
-            ntot_derasement_solde = sum(derasement_solde, na.rm = T))
+sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20241201.gpkg")
 
-
-# Valorisation régionale de la "BDROE"
-
-## Etat
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = etat_nom)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "Statut de l'ouvrage",
-       y = "Nombre d'ouvrages",
-       title = "Etat")
-
-## Type
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = type_nom)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "Type d'ouvrage",
-       y = "Nombre d'ouvrages",
-       title = "Type d'ouvrage")
-
-## Hauteur de chute
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(y = hauteur_chute_etiage_classe)) +
-  geom_bar(fill = "blue") +
-  labs(y = "Hauteur de chute",
-       x = "Nombre d'ouvrages",
-       title = "Hauteur de chute")
-
-## FPI
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = fpi_nom1)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "Type de franchissement piscicole",
-       y = "Nombre d'ouvrages",
-       title = "Type de franchissement piscicole")
-
-## ATG
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = avis_technique_global)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "ATG",
-       y = "Nombre d'ouvrages",
-       title = "Avis Technique Global")
-
-## Usages
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = usage_nom1)) +
-  geom_bar(fill = "blue") +
-  coord_flip() +
-  labs(x = "Type d'usage",
-       y = "Nombre d'ouvrages",
-       title = "Type d'usage")
-
-## Dynamique de renseignement
-
-ggplot(data = bdroe_dr2_maj, 
-       aes(x = mutate(date_modification = as.date(date_modification)))) +
-  geom_histogram(fill = "blue") +
-  labs(x = "Date de l'observation",
-       y = "Nombre d'ouvrages",
-       title = "Dynamique de renseignement : date de modification")   
+save(bdroe,
+     bdroe_dr2_valid,
+     nb_non_valides,
+     nb_manque_etat,
+     nb_manque_type,
+     nb_manque_hc,
+     nb_manque_fip,
+     nb_manque_atg_l2,
+     nb_manque_op,
+     nb_manque_l2,
+     nb_ouvrages_prioritaires,
+     nb_ouvrages_l2,
+     nb_atg_l2,
+     nb_mec_atg_hc,
+     file = "data/outputs/bdroe.RData")
