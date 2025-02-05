@@ -246,4 +246,4 @@ Ce groupe de couches contient les données suivantes :
 
 Ce travail est réalisé à partir des logiciels R (partie analytique) et Qgis (partie cartographique).
 
-Les scripts utilisés sont librement accessibles et réutilisables, dans la partie analytique,  pour plus d'information consulter le [document de présentation de ce projet sur Gihub]().
+Les scripts utilisés sont librement accessibles et réutilisables, dans la partie analytique,  pour plus d'information consulter le [document de présentation de ce projet sur Gihub](https://github.com/josselinbarry/geobs).

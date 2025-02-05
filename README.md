@@ -180,10 +180,6 @@ Répartition des ouvrages selon le système de franchissement piscicole renseign
 
 Dynamique de renseignement des champs dates. 
 
-## Améliorations envisagées (en cours de réalisation)
-
-### Ecriture du script de production de la couche de synthèse des manques identifiés par bassin vesant de masse d'eau.
-### Ecriture des scripts "Valorisation régionale des principales informations contenues dans les bases ROE et BDOE"
 
 
-Josselin BARRY, OFB, Janvier 2025
+**Josselin BARRY, OFB, Janvier 2025**
