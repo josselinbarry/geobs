@@ -22,7 +22,7 @@ Deux dernières analyses, plus secondaires, viennent compléter ces premiers él
 
 L'outil propose enfin deux exports de données sous forme de couche géographiques au format géopackage : 
 - Une couche dite *"BDROE interne"* issue de la jointure du ROE interne et de la BDOE, complétée des différents paramètres d'analyse,
-- Une couche des bassins versant des masses d'eau qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées (EN COURS DE REALISATION).
+- Une couche des bassins versant des masses d'eau qui compile, sous forme de synthèse par masse d'eau, l'ensemble des manques identifiés pour les ouvrages qui leur sont rattachées.
 
 ## Import des données 
 
@@ -150,7 +150,17 @@ L'outil permet enfin d'exporter une couche de la "BDROE interne" au format géop
 
 Cette couche est ensuite diffusée régionalement aux agents en charge de renseigner des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiés. 
 
-## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE (EN COURS DE REALISATION)
+## Couche de synthèse par masse d'eau
+
+Production d'une couche des bassins versant des masses d'eau qui synthétise par masse d'eau, les principaux manques identifiés pour les ouvrages qui leur sont rattachés.
+
+<img width="217" height="163" alt="etiquette_synthese" src="https://github.com/user-attachments/assets/31c11a0a-e641-4e9b-ba92-8f032874a4df" />
+
+## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE
+
+### Nombre total d'ouvrages
+
+Répartition des ouvrages selon leur statut de validité.
 
 ### Etat
 
