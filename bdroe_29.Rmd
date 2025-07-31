@@ -41,9 +41,9 @@ load(file = "data/outputs/bdroe_valid_bzh.RData")
 
 ## Création de la couche BDROE :
 
-**ROE** : Référentiel des Obstacles à l'Ecoulement, extraction des données **internes** réalisée le 1er décembre 2024.
+**ROE** : Référentiel des Obstacles à l'Ecoulement, extraction des données **internes** réalisée le 27 Juillet 2025.
 
-**BDOE** : Base de Donnée sur les Obstacles à l'Ecoulement, export des données **internes** réalisée le 6 janvier 2025.
+**BDOE** : Base de Donnée sur les Obstacles à l'Ecoulement, export des données **internes** réalisée le 30 Juillet 2025.
 
 Une série de traitements permet par jointure des bases, d'obtenir une couche "complète" des informations dont nous disposons sur les obstacles à l'écoulement : 
 
@@ -109,6 +109,8 @@ A l'échelle de l'inter-région :
   * `r nrow(nb_mec_atg_hc) %>% format(scientific=FALSE, big.mark=" ")` ouvrages présentent un **manque de complétude entre les valeurs d'état** (détruit entièrement ou dérasé) **de hauteur de chute** (nulle) **et d'ATG** (non renseigné) (`r round(nrow(nb_mec_atg_hc)*100/nrow(bdroe))`% des ouvrages)
 
 # Synthèse des manques de complétude par territoire :
+
+**Les données présentées dans cette partie (cartographie comprise) ne comprennent pas les ouvrages gelés ou "soldés".** 
 
 ## Régions Bretagne et Pays de la Loire
 
@@ -406,7 +408,15 @@ afficher_carte(readPNG('data/cartes/FINISTERE_manque_me.PNG'))
 
 # Visualisation des données connues
 
-La série de diagramme suivante est dynamique, il est donc possible de cocher/décocher le(s) département(s) de votre choix dans la représentation graphique.
+**La série de diagramme suivante est dynamique, il est donc possible de cocher/décocher le(s) département(s) de votre choix dans la représentation graphique.**
+
+**Les données présentées dans cette partie comprennent l'ensemble des ouvrages y compris ceux gelés ou "soldés".**
+
+## Le nombre total d'ouvrages
+
+```{r,}
+histo_roe_nb_bzh
+```
 
 ## L'état des ouvrages 
 

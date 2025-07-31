@@ -35,33 +35,44 @@ library(plyr)
 
 ## BDOE ----
 
-bdoe <- data.table::fread(file = "data/export_de_base_20250106.csv",
+bdoe <- data.table::fread(file = "data/bdoe/export_de_base_20250730.csv",
+                              encoding = "UTF-8")
+
+#bdoe_bzh <- data.table::fread(file = "data/bdoe/bzh_export_de_base_20250730.csv",
                           encoding = "UTF-8")
 
-sans_fiche_bdoe_bzh <- data.table::fread(file = "data/bdoe/bzh_export_de_base_sansFiches_20250106.csv",
+#bdoe_pdl <- data.table::fread(file = "data/bdoe/pdl_export_de_base_20250730.csv",
+                              encoding = "UTF-8")
+
+#bdoe_sn <- data.table::fread(file = "data/bdoe/sn_export_de_base_20250730.csv",
+                              encoding = "UTF-8")
+
+sans_fiche_bdoe_bzh <- data.table::fread(file = "data/bdoe/bzh_export_de_base_sansFiches_20250730.csv",
                                      encoding = "Latin-1")
 
-sans_fiche_bdoe_pdl <- data.table::fread(file = "data/bdoe/pdl_export_de_base_sansFiches_20250106.csv",
+sans_fiche_bdoe_pdl <- data.table::fread(file = "data/bdoe/pdl_export_de_base_sansFiches_20250730.csv",
                                          encoding = "Latin-1")
 
-sans_fiche_bdoe_sn <- data.table::fread(file = "data/bdoe/sn_export_de_base_sansFiches_20250107.csv",
+sans_fiche_bdoe_sn <- data.table::fread(file = "data/bdoe/sn_export_de_base_sansFiches_20250730.csv",
                                          encoding = "Latin-1")
+
+#bdoe <- dplyr::bind_rows(bdoe_bzh, bdoe_pdl, bdoe_sn)
 
 roe_sans_fiche_bdoe <- dplyr::bind_rows(sans_fiche_bdoe_bzh, sans_fiche_bdoe_pdl, sans_fiche_bdoe_sn) %>%
   mutate(sans_fiche_bdoe = 1)
 
 ## ROE par bassin ----
 
-roe_lb <- data.table::fread(file = "data/lb_temp20241201.csv",
-                            encoding = "Latin-1",
+roe_lb <- data.table::fread(file = "data/lb_temp20250727.csv",
+                            encoding = "UTF-8",
                             colClasses = c("date_creation" = "character"))
 
-roe_sn <- data.table::fread(file = "data/sn_temp20241201.csv",
-                            encoding = "Latin-1",
+roe_sn <- data.table::fread(file = "data/sn_temp20250727.csv",
+                            encoding = "UTF-8",
                             colClasses = c("date_creation" = "character"))
 
-roe_nr <- data.table::fread(file = "data/nr_temp20241201.csv",
-                            encoding = "Latin-1",
+roe_nr <- data.table::fread(file = "data/nr_temp20250727.csv",
+                            encoding = "UTF-8",
                             colClasses = c("date_creation" = "character"))
 
 ## Fusionner les ROE par bassin ---- 
@@ -147,7 +158,8 @@ tampon_liste1 <-
   sf::st_buffer(liste1, dist = 50)
 
 ouvrages_prioritaires <-
-  data.table::fread(file = "data/20230601_Ouv_prioritaires BZH_PDL.csv")
+  data.table::fread(file = "data/20230601_Ouv_prioritaires BZH_PDL.csv",
+                    encoding = "Latin-1")
 
 zap_anguille <-
   sf::read_sf(dsn = "data/zap_anguille.gpkg")
@@ -319,7 +331,7 @@ bdroe_test <- roe_lb_sn_nr %>%
 
 # MAJ OP vraie mais attendre demarche priorisation PDL = PLAGEPOMI ----
 
-#ouvrages_prioritaires <- 
+ouvrages_prioritaires_bis <- 
   filter(bdroe_dr2, demarche_priorisation_4 == 'PLAGEPOMI') %>% 
   mutate(ouvrage_prioritaire = 1) %>% 
   mutate(ouvrage_prioritaire = as.numeric(ouvrage_prioritaire)) %>%
@@ -345,7 +357,7 @@ bdroe_dr2 <- bdroe_dr2 %>%
 
 ## examen des duplicats ----
 
-identifiants_roe_dupliques <- bdroe_dr2_maj %>% 
+identifiants_roe_dupliques <- bdroe_dr2 %>% 
   sf::st_drop_geometry() %>% 
   group_by(identifiant_roe) %>% 
   tally() %>% 
@@ -549,6 +561,33 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
     !is.na(derasement_solde) ~ derasement_solde
   ))
 
+# Mise en évidence ouvrages fils
+
+bdroe_pere1 <- bdroe_dr2_maj %>% 
+  filter(ouvrage_fils1 != '' & !is.na(ouvrage_fils1)) %>%
+  mutate(ouvrage_fils=ouvrage_fils1) %>%
+  select(identifiant_roe, ouvrage_fils) %>%
+  st_drop_geometry()
+
+bdroe_pere2 <- bdroe_dr2_maj %>% 
+  filter(ouvrage_fils2 != '' & !is.na(ouvrage_fils2)) %>%
+  mutate(ouvrage_fils=ouvrage_fils2) %>%
+  select(identifiant_roe, ouvrage_fils)%>%
+  st_drop_geometry()
+
+bdroe_pere3 <- bdroe_dr2_maj %>% 
+  filter(ouvrage_fils3 != '' & !is.na(ouvrage_fils3)) %>%
+  mutate(ouvrage_fils=ouvrage_fils3) %>%
+  select(identifiant_roe, ouvrage_fils)%>%
+  st_drop_geometry()
+
+bdroe_pere <- dplyr::bind_rows(bdroe_pere1, bdroe_pere2, bdroe_pere3) %>%
+  mutate(ouvrage_pere = identifiant_roe) %>%
+  select(ouvrage_fils, ouvrage_pere)
+
+bdroe_dr2_maj <- bdroe_dr2_maj %>% 
+  left_join(bdroe_pere, by = c("identifiant_roe" = "ouvrage_fils"))
+  
 # Nettoyage des champs inutiles ----
 
 bdroe_dr2_maj <- bdroe_dr2_maj %>%
@@ -692,7 +731,7 @@ nb_manque_op <- bdroe_dr2_valid %>%
   filter(manque_op ==1)
 
 nb_manque_l2 <- bdroe_dr2_valid %>%
-  filter(manque_l2 ==1)
+  filter(manque_l2 ==1 & (type_nom != 'Epis en rivière' | type_nom == '' | is.na(type_nom)))
 
 nb_ouvrages_prioritaires <- bdroe_dr2_valid %>%
   filter(ouvrage_prioritaire == 1)
@@ -705,9 +744,10 @@ nb_atg_l2 <- bdroe_dr2_valid %>%
 
 # Sauvegarder la couche bdroe_dr2_maj ----
 
-sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20241201.gpkg")
+sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20250727.gpkg")
 
 save(bdroe,
+     bdroe_dr2,
      bdroe_dr2_valid,
      nb_non_valides,
      nb_manque_etat,
@@ -722,3 +762,6 @@ save(bdroe,
      nb_atg_l2,
      nb_mec_atg_hc,
      file = "data/outputs/bdroe.RData")
+
+
+load(file = "data/outputs/bdroe.RData")

@@ -50,7 +50,7 @@ afficher_carte(readPNG('data/cartes/mise_en_qualite.png'))
 _**Avertissement préalable sur la version de Qgis :**_
 
 Ce projet a été réalisé avec une version 3.34 de Qgis.
-Il est recommandé, pour une utilisation optimale de ce projet (affichage des étiquettes notamment), de **le consulter avec une version supérieure ou égale à 3.22. de Qgis**.
+Il est recommandé, pour une utilisation optimale de ce projet (affichage des étiquettes notamment), de **le consulter avec une version supérieure ou égale à 3.34. de Qgis**.
 
 # Le groupe de données "Mise en qualité du ROE" : pour cibler les ouvrages présentant des lacunes attributaires essentielles
 
@@ -62,15 +62,15 @@ L'analyse proposée repose sur la couche **BDROE_interne_BZH_PDL_20241201**.
 
 Cette couche géographique est issue d'une jointure entre les couches : 
 
-* **ROE** : Référentiel des Obstacles à l'Ecoulement, extraction des données **internes** réalisée le 1er décembre 2024.
+* **ROE** : Référentiel des Obstacles à l'Ecoulement, extraction des données **internes** réalisée le 27 Juillet 2025.
 
-* **BDOE** : Base de Donnée sur les Obstacles à l'Ecoulement, export des données **internes** réalisée le 6 janvier 2025. 
+* **BDOE** : Base de Donnée sur les Obstacles à l'Ecoulement, export des données **internes** réalisée le 30 Juillet 2025.
 
 **Sont ensuite écartés, par filtre, les ouvrages gelés ou dont le dérasement peut être considéré comme "soldé"** :
 
 * dont le statut est gelé ;
 
-* dont l’état est entièrement détruit (ou dérasé dans la BDOE) ET dont la hauteur de chute est nulle ET dont l’Avis Technique Global est positif (ils sont considérés comme "soldés" et ne sont donc pas priorisés).
+* dont l’état est entièrement détruit (ou dérasé dans la BDOE) **ET** dont la hauteur de chute est nulle **ET** dont l’Avis Technique Global est positif (ils sont alors considérés comme "soldés" et ne sont donc pas priorisés).
 
 Cette couche est visualisée selon un ensemble de règles afin de pouvoir cibler les lacunes du ROE. Chaque ouvrage peut donc apparaitre dans différentes catégories : 
 
@@ -228,7 +228,7 @@ Ce groupe de couches contient les données suivantes :
 
 * Les tronçons de cours d’eau inscrits à la **Liste 2 de l’art. L214.17** du CE
 
-* Les **Zones d’Action Prioritaire Anguille (ZPA)**
+* Les **Zones d’Action Prioritaire Anguille** (ZAP)
 
 * Les **Schémas d'Aménagement et de Gestion de l'Eau** (SAGE)
 
@@ -246,4 +246,4 @@ Ce groupe de couches contient les données suivantes :
 
 Ce travail est réalisé à partir des logiciels R (partie analytique) et Qgis (partie cartographique).
 
-Les scripts utilisés sont librement accessibles et réutilisables, dans la partie analytique,  pour plus d'information consulter le [document de présentation de ce projet sur Gihub](https://github.com/josselinbarry/geobs).
+Les scripts utilisés sont librement accessibles et réutilisables, dans la partie analytique,  pour plus d'information consulter le [document de présentation de ce projet sur Github](https://github.com/josselinbarry/geobs).
