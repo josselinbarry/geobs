@@ -192,4 +192,4 @@ Dynamique de renseignement des champs dates.
 
 
 
-**Josselin BARRY, OFB, Janvier 2025**
+**Josselin BARRY, OFB-DR Bretagne, Juillet 2025**
