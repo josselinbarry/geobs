@@ -150,11 +150,13 @@ L'outil permet enfin d'exporter une couche de la "BDROE interne" au format géop
 
 Cette couche est ensuite diffusée régionalement aux agents en charge de renseigner des bases ROE et BDOE, via un projet Qgis et une mise en forme dédiés. 
 
+<img width="205" height="198" alt="legende_mise_en_qualite" src="https://github.com/user-attachments/assets/fadb56bc-d941-4630-88b2-98b2e705d304" />
+
 ## Couche de synthèse par masse d'eau
 
 Production d'une couche des bassins versant des masses d'eau qui synthétise par masse d'eau, les principaux manques identifiés pour les ouvrages qui leur sont rattachés.
 
-<img width="217" height="163" alt="etiquette_synthese" src="https://github.com/user-attachments/assets/31c11a0a-e641-4e9b-ba92-8f032874a4df" />
+<img width="204" height="163" alt="etiquette_synthese" src="https://github.com/user-attachments/assets/0dab31f1-a293-4d27-ab8c-7387728b793a" />
 
 ## Valorisation régionale des principales informations contenues dans les bases ROE et BDOE
 
@@ -192,4 +194,4 @@ Dynamique de renseignement des champs dates.
 
 
 
-**Josselin BARRY, OFB-DR Bretagne, Juillet 2025**
+**Josselin BARRY, OFB-DR Bretagne, Septembre 2025**
