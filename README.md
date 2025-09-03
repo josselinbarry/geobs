@@ -74,31 +74,31 @@ L'outil assure une jointure spatiale avec la couche des SAGE et renseigne le nom
 #### Non validés (non_valides)
 Mise en évidence (0/1) des ouvrages dont le statut du ROE est NULL ou non validé (statut_nom).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_NON_VALIDE" src="https://github.com/user-attachments/assets/e374ce20-267b-4c66-baa2-1c977b1777e1" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_NON_VALIDE" src="https://github.com/user-attachments/assets/e374ce20-267b-4c66-baa2-1c977b1777e1" />
 
 #### Type (manque_type)
 
 Mise en évidence (0/1) des ouvrages dont le type du ROE est NULL (type_nom).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_TYPE" src="https://github.com/user-attachments/assets/6ef81097-358c-41de-93bc-ce20a368f456" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_TYPE" src="https://github.com/user-attachments/assets/6ef81097-358c-41de-93bc-ce20a368f456" />
 
 #### Etat (manque_etat)
 
 Mise en évidence (0/1) des ouvrages dont l'Etat du ROE est NULL (etat_nom).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_ETAT" src="https://github.com/user-attachments/assets/ee372c11-008a-4d86-8e55-472ddbec1d81" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_ETAT" src="https://github.com/user-attachments/assets/ee372c11-008a-4d86-8e55-472ddbec1d81" />
 
 #### Franchissement piscicole (manque_fip)
 
 Mise en évidence (0/1) des ouvrages dont l'existance d'un amménagement de franchissement piscicole n'est pas connue dans le ROE (fpi_nom1, fpi_nom2, fpi_nom3, fpi_nom4 et fpi_nom5) et la BDOE (mesure_corrective_devalaison_equipement et mesure_corrective_montaison_equipement).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_FIP" src="https://github.com/user-attachments/assets/67c1e4c5-0687-4b1b-a0ed-116d0695b113" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_FIP" src="https://github.com/user-attachments/assets/67c1e4c5-0687-4b1b-a0ed-116d0695b113" />
 
 #### Hauteur de chute
 
 Mise en évidence (0/1) des ouvrages dont l'existance d'un amménagement de franchissement piscicole n'est pas connue dans le ROE (hauteur_chute_etiage et hauteur_chute_etiage_classe), la BDOE (ouv_hauteur_chute_1, ouv_hauteur_chute_2, ouv_hauteur_chute_3, ouv_hauteur_chute_4 et ouv_hauteur_chute_5) et ICE (hauteur_chute_ICE).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_HC" src="https://github.com/user-attachments/assets/a51c12d5-9f6d-4d06-afc7-4fbf2f0dade6" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_HC" src="https://github.com/user-attachments/assets/a51c12d5-9f6d-4d06-afc7-4fbf2f0dade6" />
 
 ### Données de priorisation
 
@@ -106,13 +106,13 @@ Mise en évidence (0/1) des ouvrages dont l'existance d'un amménagement de fran
 
 Mise en évidence (0/1) des ouvrages situés en Liste 2 et qui présentent au moins un manque identifié sur l'une des 5 données essentielles.
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_L2" src="https://github.com/user-attachments/assets/d0646c54-7a13-4db0-aac4-d7471a5d0f26" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_L2" src="https://github.com/user-attachments/assets/d0646c54-7a13-4db0-aac4-d7471a5d0f26" />
 
 #### Manque identifié sur Ouvrage Prioritaire (manque_op)
 
 Mise en évidence (0/1) des ouvrages classés comme Ouvrages Prioritaires et qui présentent au moins un manque identifié sur l'une des 5 données essentielles.
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_OP" src="https://github.com/user-attachments/assets/ca8be7c1-ea80-47ad-bfbc-2fce93b7e99e" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_OP" src="https://github.com/user-attachments/assets/ca8be7c1-ea80-47ad-bfbc-2fce93b7e99e" />
 
 ### Données complémentaires
 
@@ -120,13 +120,13 @@ Mise en évidence (0/1) des ouvrages classés comme Ouvrages Prioritaires et qui
 
 Mise en évidence (0/1) des ouvrages situés en Liste 2 et qui ne dispose pas d'Avis Technique Global dans le BDOE (avis_technique_global).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_atg_L2" src="https://github.com/user-attachments/assets/d8afbb51-6e3f-4697-9df1-ac4939c4895b" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_atg_L2" src="https://github.com/user-attachments/assets/d8afbb51-6e3f-4697-9df1-ac4939c4895b" />
 
 #### Besoin de mise en cohérence de l'Avis Technique Global, avec l'état et la hauteur de chute
 
 Mise en évidence (0/1) des ouvrages indiqués comme dérasés dans la BDOE (ouv_derasement) ou entièrement détruits dans le ROE (etat_nom), dont la hauteur de chute est nulle dans le ROE, la BDOE ou ICE, et dont l’Avis Technique Global est NULL dans la BDOE (avis_technique_global).
 
-<img width="1753" height="1240" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_coherence_etat_hc_atg" src="https://github.com/user-attachments/assets/353bd30d-a457-4506-b466-cee12f866c92" />
+<img width="877" height="620" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_coherence_etat_hc_atg" src="https://github.com/user-attachments/assets/353bd30d-a457-4506-b466-cee12f866c92" />
 
 #### Mise en évidence des "ouvrages dérasés soldés"
 
