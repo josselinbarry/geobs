@@ -76,9 +76,14 @@ Une série de traitements permet par jointure des bases, d'obtenir une couche "c
 
   * **ATG_l2** : ouvrage situé en Liste 2 ne disposant pas de l’information "Avis technique Global", dans la BDOE.
 
-  * **mec_hc_atg** : ouvrages  indiqués comme dérasés ou entièrement détruits, dont la hauteur de chute est nulle mais ne disposant pas de l’information "ATG" dans la BDOE.
+  * **mec_hc_atg** : ouvrages  indiqués comme dérasés ou entièrement détruits, mais dont la hauteur de chute n'est pas nulle et dont l'Avis technique global (ATG) n'est pas _'positif'_ ou éventuellement _'indéterminé'_ dans la BDOE. Le dérasement ne peut alors être considéré comme _"soldé"_.
 
-  * Création et renseignement du champ **derasement_solde** pour écarter du traitement les ouvrages ayant fait l'objet d'un dérasement avéré : ouvrages dont l’état est entièrement détruit (ou dérasé dans la BDOE) **ET** dont la hauteur de chute est nulle **ET** dont l’Avis Technique Global (ATG) est positif (ils sont considérés comme "soldés" et ne sont donc pas priorisés).
+  * Création et renseignement du champ **derasement_solde** pour écarter du traitement les ouvrages ayant fait l'objet d'un dérasement avéré : Ouvrages dont l’état est entièrement détruit (ou dérasé dans la BDOE) **ET** :
+  
+    * dont la hauteur de chute est nulle 
+    * **OU** dont l’Avis Technique Global (ATG) est positif.
+    
+    Leur dérasement est alors considéré comme "soldé" et ces ouvrages ne sont donc plus pris en considération pour les besoins de mise en qualité).
 
 ## Principaux chiffres : 
 
@@ -106,11 +111,11 @@ A l'échelle de l'inter-région :
   
   * `r nrow(nb_atg_l2) %>% format(scientific=FALSE, big.mark=" ")` **ouvrages situés en liste 2** ne disposent pas d'**Avis Technique Global (ATG)** dans la BDOE (`r round(nrow(nb_atg_l2)*100/nrow(nb_ouvrages_l2))`% des ouvrages situés en liste 2)
 
-  * `r nrow(nb_mec_atg_hc) %>% format(scientific=FALSE, big.mark=" ")` ouvrages présentent un **manque de complétude entre les valeurs d'état** (détruit entièrement ou dérasé) **de hauteur de chute** (nulle) **et d'ATG** (non renseigné) (`r round(nrow(nb_mec_atg_hc)*100/nrow(bdroe))`% des ouvrages)
+  * `r nrow(nb_mec_atg_hc) %>% format(scientific=FALSE, big.mark=" ")` ouvrages présentent un **manque de cohérence entre les valeurs d'état** (détruit entièrement ou dérasé) **de hauteur de chute** (non nulle) **et d'ATG** (non positif ou indéterminé) (`r round(nrow(nb_mec_atg_hc)*100/nrow(bdroe))`% des ouvrages)
 
 # Synthèse des manques de complétude par territoire :
 
-**Les données présentées dans cette partie (cartographie comprise) ne comprennent pas les ouvrages gelés ou "soldés".** 
+**Les données présentées dans cette partie (cartographie comprise) ne comprennent pas les ouvrages gelés ou dont le dérasement est considéré comme "soldé".** 
 
 ## Régions Bretagne et Pays de la Loire
 
@@ -411,7 +416,7 @@ afficher_carte(readPNG('data/cartes/SARTHE_manque_me.PNG'))
 
 **La série de diagramme suivante est dynamique, il est donc possible de cocher/décocher le(s) département(s) de votre choix dans la représentation graphique.**
 
-**Les données présentées dans cette partie comprennent l'ensemble des ouvrages y compris ceux gelés ou "soldés".**
+**Les données présentées dans cette partie comprennent l'ensemble des ouvrages y compris ceux gelés ou dont le dérasement est considéré comme "soldé".**
 
 ## Le nombre total d'ouvrages
 
@@ -460,3 +465,9 @@ histo_roe_usage_pdl
 ```{r,}
 ggplotly(histo_roe_date_pdl)
 ```
+
+# Sources
+
+Ce travail est réalisé à partir des logiciels R (partie analytique) et Qgis (partie cartographique).
+
+Les scripts utilisés sont librement accessibles et réutilisables, dans la partie analytique,  pour plus d'information consulter le [document de présentation de ce projet sur Github](https://github.com/josselinbarry/geobs).

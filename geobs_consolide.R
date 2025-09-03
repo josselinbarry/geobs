@@ -324,7 +324,7 @@ save(bdroe_dr2,
 
 load(file = "data/outputs/maj_roe.RData")
 
-write.csv(roe_sans_fiche_bdoe, file = "data/outputs/sans_fiche_bdoe_20250106.csv")
+write.csv(roe_sans_fiche_bdoe, file = "data/outputs/sans_fiche_bdoe_20250902.csv")
 
 bdroe_test <- roe_lb_sn_nr %>%
   filter("identifiant_roe" == 'ROE127262')
@@ -357,7 +357,7 @@ bdroe_dr2 <- bdroe_dr2 %>%
 
 ## examen des duplicats ----
 
-identifiants_roe_dupliques <- bdroe_dr2 %>% 
+identifiants_roe_dupliques <- bdroe_dr2_maj %>% 
   sf::st_drop_geometry() %>% 
   group_by(identifiant_roe) %>% 
   tally() %>% 
@@ -366,7 +366,7 @@ identifiants_roe_dupliques <- bdroe_dr2 %>%
 
 # Correction "manuelle" duplicatats ----
 
-bdroe_dr2 <- bdroe_dr2 %>%
+bdroe_dr2_maj <- bdroe_dr2_maj %>%
   filter(coalesce(hauteur_chute_ICE,1000) != '59')
 
 maj_roe_avec_duplicats2 <- bdroe_dr2_2 %>% 
@@ -433,16 +433,18 @@ manque_atg_l2 <-
   sf::st_drop_geometry()
 
 mec_atg_hc <-
-  mutate(bdroe_dr2, mec_atg_hc = ifelse(
+  mutate(bdroe_dr2_maj, mec_atg_hc = ifelse(
     (etat_nom == "Détruit entièrement" | ouv_derasement == "TRUE") & 
-      (hauteur_chute_etiage == 0 | 
-         ouv_hauteur_chute_1 == 0 | 
-         ouv_hauteur_chute_2 == 0 | 
-         ouv_hauteur_chute_3 == 0 | 
-         ouv_hauteur_chute_4 == 0 |  
-         ouv_hauteur_chute_5 == 0 | 
-         hauteur_chute_ICE == 0) &
-      (avis_technique_global == "" |is.na(avis_technique_global)),
+      ((hauteur_chute_etiage != 0 | is.na(hauteur_chute_etiage)) &
+         (ouv_hauteur_chute_1 != 0 | is.na(ouv_hauteur_chute_1)) &
+         (ouv_hauteur_chute_2 != 0 | is.na(ouv_hauteur_chute_1)) &
+         (ouv_hauteur_chute_3 != 0 | is.na(ouv_hauteur_chute_1)) &
+         (ouv_hauteur_chute_4 != 0 | is.na(ouv_hauteur_chute_1)) &
+         (ouv_hauteur_chute_5 != 0 | is.na(ouv_hauteur_chute_1)) &
+         (hauteur_chute_ICE != 0 | is.na(hauteur_chute_ICE))) &
+      (avis_technique_global == "" |
+         is.na(avis_technique_global) | 
+         avis_technique_global == "Négatif"),
     '1', '0')) %>%
   mutate(mec_atg_hc = as.numeric(mec_atg_hc)) %>%
   select(identifiant_roe, mec_atg_hc) %>% 
@@ -546,15 +548,21 @@ att_manque_op <- bdroe_dr2_maj %>%
 
 bdroe_dr2_maj <- bdroe_dr2_maj %>% 
   mutate(derasement_solde = ifelse(
-    ((etat_nom == "Détruit entièrement" | ouv_derasement == "TRUE") & 
-       (hauteur_chute_etiage == 0 | 
+    (((etat_nom == "Détruit entièrement" | 
+        ouv_derasement == "TRUE") & 
+       ((hauteur_chute_etiage == 0 | 
           ouv_hauteur_chute_1 == 0 | 
           ouv_hauteur_chute_2 == 0 | 
           ouv_hauteur_chute_3 == 0 | 
           ouv_hauteur_chute_4 == 0 |  
           ouv_hauteur_chute_5 == 0 | 
           hauteur_chute_ICE == 0) &
-       avis_technique_global == 'Positif'), '1', '0')) %>%
+       (avis_technique_global == 'Positif' | 
+          avis_technique_global == '' | 
+          is.na(avis_technique_global)))) |
+      ((etat_nom == "Détruit entièrement" | 
+          ouv_derasement == "TRUE") & 
+         (avis_technique_global == 'Positif'))), '1', '0')) %>%
   mutate(derasement_solde  = as.numeric(derasement_solde)) %>%
   mutate(derasement_solde = case_when(
     is.na(derasement_solde) ~ 0,
@@ -588,6 +596,7 @@ bdroe_pere <- dplyr::bind_rows(bdroe_pere1, bdroe_pere2, bdroe_pere3) %>%
 bdroe_dr2_maj <- bdroe_dr2_maj %>% 
   left_join(bdroe_pere, by = c("identifiant_roe" = "ouvrage_fils"))
   
+
 # Nettoyage des champs inutiles ----
 
 bdroe_dr2_maj <- bdroe_dr2_maj %>%
@@ -662,9 +671,16 @@ bdroe_dr2_maj <- bdroe_dr2_maj %>%
          -departement,
          -statut_roe)
 
+# Attention duplicatats !!! ----
+
+sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20250727.gpkg")
+
+bdroe_dr2_maj <-
+  sf::read_sf(dsn = "data/outputs/BDROE_interne_BZH_PDL_20250727.gpkg")
+
 # Calculs variables de Rmarkdown ----
 
-bdroe_dr2_maj <- bdroe
+#bdroe_dr2_maj <- bdroe
 
 bdroe_dr2_valid <- bdroe_dr2_maj %>%
   filter(statut_nom != "Gelé" & derasement_solde == 0)
@@ -715,14 +731,14 @@ nb_manque_atg_l2 <-
 
 nb_mec_atg_hc <- bdroe_dr2_valid %>%
   filter((etat_nom == "Détruit entièrement" | ouv_derasement == "TRUE") & 
-           (hauteur_chute_etiage == 0 |
-           ouv_hauteur_chute_1 == 0 | 
-           ouv_hauteur_chute_2 == 0 | 
-           ouv_hauteur_chute_3 == 0 | 
-           ouv_hauteur_chute_4 == 0 |  
-           ouv_hauteur_chute_5 == 0 | 
-           hauteur_chute_ICE == 0) &
-      (avis_technique_global == "" |is.na(avis_technique_global))) %>%
+           ((hauteur_chute_etiage != 0 | is.na(hauteur_chute_etiage)) &
+           (ouv_hauteur_chute_1 != 0 | is.na(ouv_hauteur_chute_1)) &
+           (ouv_hauteur_chute_2 != 0 | is.na(ouv_hauteur_chute_1)) &
+           (ouv_hauteur_chute_3 != 0 | is.na(ouv_hauteur_chute_1)) &
+           (ouv_hauteur_chute_4 != 0 | is.na(ouv_hauteur_chute_1)) &
+           (ouv_hauteur_chute_5 != 0 | is.na(ouv_hauteur_chute_1)) &
+           (hauteur_chute_ICE != 0 | is.na(hauteur_chute_ICE))) &
+      (avis_technique_global == "" |is.na(avis_technique_global) | avis_technique_global == "Négatif")) %>%
   select(identifiant_roe, dept_code, mec_atg_hc) %>% 
   distinct() %>%
   sf::st_drop_geometry()
@@ -746,8 +762,7 @@ nb_atg_l2 <- bdroe_dr2_valid %>%
 
 sf::write_sf(obj = bdroe_dr2_maj, dsn = "data/outputs/BDROE_interne_BZH_PDL_20250727.gpkg")
 
-save(bdroe,
-     bdroe_dr2,
+save(bdroe_dr2,
      bdroe_dr2_valid,
      nb_non_valides,
      nb_manque_etat,

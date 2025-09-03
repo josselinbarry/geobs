@@ -52,13 +52,13 @@ _**Avertissement préalable sur la version de Qgis :**_
 Ce projet a été réalisé avec une version 3.34 de Qgis.
 Il est recommandé, pour une utilisation optimale de ce projet (affichage des étiquettes notamment), de **le consulter avec une version supérieure ou égale à 3.34. de Qgis**.
 
-# Le groupe de données "Mise en qualité du ROE" : pour cibler les ouvrages présentant des lacunes attributaires essentielles
+# Le groupe de données "Mise en qualité ROE-BDOE" : pour cibler les ouvrages présentant des lacunes attributaires essentielles
 
 ## La couche BDROE
 
 ### Représentation graphique de la couche BDROE
 
-L'analyse proposée repose sur la couche **BDROE_interne_BZH_PDL_20241201**.
+L'analyse proposée repose sur la couche **BDROE_interne_BZH_PDL_20250727**.
 
 Cette couche géographique est issue d'une jointure entre les couches : 
 
@@ -70,7 +70,10 @@ Cette couche géographique est issue d'une jointure entre les couches :
 
 * dont le statut est gelé ;
 
-* dont l’état est entièrement détruit (ou dérasé dans la BDOE) **ET** dont la hauteur de chute est nulle **ET** dont l’Avis Technique Global est positif (ils sont alors considérés comme "soldés" et ne sont donc pas priorisés).
+* dont l’état est entièrement détruit (ou dérasé dans la BDOE) **ET** :
+  
+    * dont la hauteur de chute est nulle  
+    * **OU** dont l’Avis Technique Global est positif (ou éventuellement indéterminé). Ils sont alors considérés comme "soldés" et ne sont donc pas priorisés).
 
 Cette couche est visualisée selon un ensemble de règles afin de pouvoir cibler les lacunes du ROE. Chaque ouvrage peut donc apparaitre dans différentes catégories : 
 
@@ -100,9 +103,11 @@ Privilégier le remplissage de la BDOE qui permet d’indiquer une date et un op
 
 **Dispositif de franchissement non renseigné** : ouvrages ne disposant pas de l’information "Dispositif de franchissement piscicole", ni dans le ROE, ni dans BDOE.
 
-**Besoin mise en cohérence dérasement - HC – ATG** : ouvrages  indiqués comme dérasés ou entièrement détruits, dont la hauteur de chute est nulle mais ne disposant pas de l’information "Avis technique Global" dans la BDOE 
+**Besoin mise en cohérence dérasement - HC – ATG** : ouvrages  indiqués comme dérasés ou entièrement détruits, mais dont la hauteur de chute est non nulle et dont l'Avis technique Global (ATG) n'est pas positif (ou indéterminé). 
 
 **ATG non renseigné en L2** : ouvrage situé en Liste 2 ne disposant pas de l’information "Avis technique Global", dans la BDOE.
+
+**Ouvrage secondaire liés** : indique les ouvrages secondaires qui sont liés à un ouvrage principal.
 
 ### Etiquettage de la couche BDROE
 
@@ -162,7 +167,7 @@ afficher_carte(readPNG('data/cartes/etiquette_synthese.png'))
 
 ## Représentation graphique de la couche BDROE
 
-L'analyse proposée repose sur la couche **BDROE_interne_BZH_PDL_20241201** précedemment évoquée, sans écarter les ouvrages gelés ou dérasés.
+L'analyse proposée repose sur la couche **BDROE_interne_BZH_PDL_20250727** précedemment évoquée, sans écarter les ouvrages gelés ou dérasés.
 
 Cette couche est visualisée selon un ensemble de règles afin de pouvoir consulter les analyse de franchissabilité contenues dans le ROE et la BDOE. Chaque ouvrage peut donc apparaitre dans différentes catégories :
 
