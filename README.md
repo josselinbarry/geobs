@@ -80,7 +80,7 @@ Mise en évidence (0/1) des ouvrages dont le statut du ROE est NULL ou non valid
 
 Mise en évidence (0/1) des ouvrages dont le type du ROE est NULL (type_nom).
 
-<img width="3507" height="2480" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_TYPE" src="https://github.com/user-attachments/assets/6ef81097-358c-41de-93bc-ce20a368f456" />
+<img width="350" height="248" alt="BRETAGNE_PAYS_DE_LA_LOIRE_manque_completude_TYPE" src="https://github.com/user-attachments/assets/6ef81097-358c-41de-93bc-ce20a368f456" />
 
 #### Etat (manque_etat)
 
